@@ -1,5 +1,7 @@
 const { response } = require('express');
+const mongoose = require('mongoose')
 const Rol = require('../modules/rol'); // Importar el modelo de Rol
+const Permiso = require('../modules/permiso'); 
 
 
 // Método GET para obtener los roles
