@@ -1,7 +1,7 @@
 const { Router } = require('express');
 const router = Router();
-const {permisosGet} =require ('../controllers/permiso');
+const {permisosGet, permisosPost} =require ('../controllers/permiso');
 
 router.get('/', permisosGet);
-
+router.post('/', permisosPost);
 module.exports = router;

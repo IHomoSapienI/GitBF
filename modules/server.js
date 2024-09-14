@@ -30,9 +30,7 @@ class Server{
     middlewares() {
          //CORS
         this.app.use( cors({
-            origin: 'http://localhost:3000', // Permite solicitudes desde localhost:3000
-            methods: ['GET', 'POST', 'PUT', 'DELETE'], // Métodos permitidos
-            allowedHeaders: ['Content-Type'], // Cabeceras permitidas
+            
         }));
 
         this.app.use(bodyParser.json()); // for parsing application/json

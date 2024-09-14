@@ -27,8 +27,20 @@ const rolesGet = async (req, res = response) => {
 const rolesPost = async (req, res = response) => {
     const { nombreRol, permisoRol, estadoRol } = req.body; // Extraer datos del cuerpo de la solicitud
 
+    // Asegúrate de que permisoRol sea un arreglo
+    let permisosArray;
+    if (typeof permisoRol === 'string') {
+        permisosArray = [permisoRol];
+    } else if (Array.isArray(permisoRol)) {
+        permisosArray = permisoRol;
+    } else {
+        return res.status(400).json({
+            msg: 'El campo permisoRol debe ser un ID de permiso o un arreglo de IDs de permisos.'
+        });
+    }
+
     // Verificar que los IDs de permisos sean válidos
-    if (!Array.isArray(permisoRol) || !permisoRol.every(id => mongoose.Types.ObjectId.isValid(id))) {
+    if (!permisosArray.every(id => mongoose.Types.ObjectId.isValid(id))) {
         return res.status(400).json({
             msg: 'Lista de permisos inválida o IDs de permisos no válidos.'
         });
@@ -36,8 +48,8 @@ const rolesPost = async (req, res = response) => {
 
     // Verificar que todos los permisos existan
     try {
-        const permisosExistentes = await Permiso.find({ '_id': { $in: permisoRol } });
-        if (permisosExistentes.length !== permisoRol.length) {
+        const permisosExistentes = await Permiso.find({ '_id': { $in: permisosArray } });
+        if (permisosExistentes.length !== permisosArray.length) {
             return res.status(400).json({
                 msg: 'Uno o más permisos no existen.'
             });
@@ -49,7 +61,7 @@ const rolesPost = async (req, res = response) => {
     }
 
     // Crear una nueva instancia del modelo Rol
-    const rol = new Rol({ nombreRol, permisoRol, estadoRol });
+    const rol = new Rol({ nombreRol, permisoRol: permisosArray, estadoRol });
 
     let msg = '';
 
