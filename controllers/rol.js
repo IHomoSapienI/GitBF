@@ -26,7 +26,7 @@ const rolesGet = async (req, res = response) => {
 // Método POST para crear un nuevo rol
 const rolesPost = async (req, res = response) => {
     const { nombreRol, permisoRol, estadoRol } = req.body; // Extraer datos del cuerpo de la solicitud
-
+    console.log('Datos recibidos en backend:', { nombreRol, permisoRol, estadoRol });
     // Asegúrate de que permisoRol sea un arreglo
     let permisosArray;
     if (typeof permisoRol === 'string') {
