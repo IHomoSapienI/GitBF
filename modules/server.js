@@ -15,6 +15,10 @@ class Server{
         this.usuariosPath = '/api/usuarios'
         this.rolesPath = '/api/roles';
         this.permisosPath= '/api/permisos'
+        this.tiposerviciosPath= '/api/tiposervicios'
+        this.serviciosPath= '/api/servicios'
+        this.detalleserviciosPath= '/api/detalleservicios'
+        this.ventaserviciosPath= '/api/ventaservicios'
         this.authPath = '/api/auth'
         this.middlewares()
         this.routes()
@@ -52,6 +56,10 @@ class Server{
         this.app.use(this.usuariosPath, require('../routes/usuarios'))
         this.app.use(this.rolesPath, require('../routes/roles'))
         this.app.use(this.permisosPath, require('../routes/permisos'))
+        this.app.use(this.tiposerviciosPath, require('../routes/tiposervs'))
+        this.app.use(this.serviciosPath, require('../routes/servicios'))
+        this.app.use(this.detalleserviciosPath, require('../routes/detalleservicios'))
+        this.app.use(this.ventaserviciosPath, require('../routes/ventaservicios'))
         this.app.use(this.authPath, require('../routes/auth'))
 
     }
