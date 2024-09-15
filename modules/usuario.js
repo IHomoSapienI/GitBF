@@ -1,5 +1,5 @@
 const {Schema, model} = require('mongoose')
-
+ 
 const UsuarioSchema = Schema({
     nombre: {
         type: String,
@@ -19,9 +19,8 @@ const UsuarioSchema = Schema({
     },
 
     rol: {
-        type: String,
-        required: true,
-        enum: ['Admin', 'Usuario']
+        rol: { type: Schema.Types.ObjectId, ref: 'rol' },
+        
     },
 
     estado: {

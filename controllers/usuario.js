@@ -1,6 +1,6 @@
 const {response} = require('express')
 const bcrypt = require('bcryptjs')
-
+const Rol = require('../modules/rol');
 //Importar modelos
 const Usuario = require('../modules/usuario')
 
@@ -44,12 +44,18 @@ const usuariosPost = async(req, res = response) => {
     const usuario = new Usuario(body)
 
     const {nombre, email, password, rol, estado} = req.body;
-
+    
     try {
+        const existeRol = await Rol.findById(rol);
+        if (!existeRol) {
+            return res.status(400).json({
+                msg: 'El rol especificado no es válido'
+            });
+        }
         //Encriptar la contraseña
         const salt = bcrypt.genSaltSync(10); //vueltas a encriptar
         usuario.password = bcrypt.hashSync( password, salt );
-
+        
         await usuario.save()
         msg = 'Usuario Registrado'
     } catch (error) {
@@ -70,25 +76,37 @@ const usuariosPost = async(req, res = response) => {
         msg: msg
     });
 
+    
 }
 
-const usuariosPut = async(req, res = response) => {
-    const body = req.query
+// Actualizar un usuario existente
+const usuariosPut = async (req, res = response) => {
+    const { email, nombre, rol } = req.body;
 
-    console.log(body)
+    try {
+        // Verificar si el rol existe
+        const existeRol = await Rol.findById(rol);
+        if (!existeRol) {
+            return res.status(400).json({
+                msg: 'El rol especificado no es válido'
+            });
+        }
 
-  //  const usuario = new Usuario(body)
+        // Actualizar el usuario por su email
+        const usuario = await Usuario.findOneAndUpdate({ email }, { nombre, rol }, { new: true });
 
-    const {nombre, email, password, rol, estado} = req.body
-
-    const usuario = await Usuario.findOneAndUpdate({email: email}, {nombre: nombre, rol: rol});
-
-    res.json({
-        msg: 'Usuario Modificado',
-        usuario
-    });
-
-}
+        res.json({
+            msg: 'Usuario Modificado correctamente',
+            usuario
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({
+            msg: 'Error al modificar usuario',
+            error
+        });
+    }
+};
 
 const usuariosDelete = async(req, res = response) => {
     const body = req.query
