@@ -84,23 +84,38 @@ const rolesPost = async (req, res = response) => {
 };
 
 // Método PUT para actualizar un rol por su id
-const rolesPut = async (req, res = response) => {
+const rolesPut = async (req, res) => {
     const { id } = req.params;
+    const { nombreRol, permisoRol, estadoRol } = req.body;
 
-    // Verificar si el rol con el id proporcionado existe
-    const rol = await Rol.findById(id);
-    if (!rol) {
-        return res.status(404).json({
-            msg: 'Rol no encontrado'
+    try {
+        // Verifica que el rol existe antes de actualizar
+        const rolExistente = await Rol.findById(id);
+        if (!rolExistente) {
+            return res.status(404).json({
+                message: 'Rol no encontrado',
+            });
+        }
+
+        // Actualiza los campos del rol
+        rolExistente.nombreRol = nombreRol || rolExistente.nombreRol;
+        rolExistente.permisoRol = permisoRol || rolExistente.permisoRol;
+        rolExistente.estadoRol = estadoRol !== undefined ? estadoRol : rolExistente.estadoRol;
+
+        await rolExistente.save();
+
+        res.json({
+            message: 'Rol actualizado exitosamente',
+            rol: rolExistente,
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({
+            message: 'Error al actualizar el rol',
         });
     }
-
-    const updatedRol = await Rol.findByIdAndUpdate(id, req.body, { new: true });
-
-    res.json({
-        updatedRol
-    });
 };
+
 
 // Método DELETE para eliminar un rol por su id
 const rolesDelete = async (req, res = response) => {
