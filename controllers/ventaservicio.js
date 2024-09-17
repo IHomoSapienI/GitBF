@@ -27,7 +27,7 @@ const ventaserviciosGet = async (req, res = response) => {
     }
 };
 
-// Crear un nuevo servicio
+
 // Crear una nueva venta de servicio
 const ventaserviciosPost = async (req, res = response) => {
     const { cita, detalle, cliente, duracion, precioTotal, estado } = req.body; // Extraer datos del cuerpo de la solicitud
@@ -64,8 +64,76 @@ const ventaserviciosPost = async (req, res = response) => {
         });
     }
 };
+// Actualizar una venta existente
+const ventaserviciosPut = async (req, res = response) => {
+    const { id } = req.params;
+    const { cita, detalle, cliente, duracion, precioTotal, estado } = req.body;
+
+    try {
+        // Verificar si la venta existe
+        const venta = await Ventaservicio.findById(id);
+        if (!venta) {
+            return res.status(404).json({
+                msg: 'Venta de servicio no encontrada'
+            });
+        }
+
+        // Verificar si el detalle de servicio especificado existe
+        const existeDetalleServicio = await Detalleservicio.findById(detalle);
+        if (!existeDetalleServicio) {
+            return res.status(400).json({
+                msg: 'El detalle de servicio especificado no existe en la base de datos.'
+            });
+        }
+
+        // Actualizar la venta de servicio
+        venta.cita = cita;
+        venta.detalle = detalle;
+        venta.cliente = cliente;
+        venta.duracion = duracion;
+        venta.precioTotal = precioTotal;
+        venta.estado = estado;
+
+        await venta.save();
+        res.json({
+            msg: 'Venta de servicio actualizada correctamente',
+            venta
+        });
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({
+            msg: 'Error al actualizar la venta de servicio'
+        });
+    }
+};
+
+const ventaserviciosDelete = async (req, res = response) => {
+    const { id } = req.params;
+
+    try {
+        // Eliminar la venta de servicio por ID
+        const result = await Ventaservicio.findByIdAndDelete(id);
+
+        if (!result) {
+            return res.status(404).json({
+                msg: 'Venta de servicio no encontrada'
+            });
+        }
+
+        res.json({
+            msg: 'Venta de servicio eliminada correctamente'
+        });
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({
+            msg: 'Error al eliminar la venta de servicio'
+        });
+    }
+};
 
 module.exports = {
     ventaserviciosGet,
-    ventaserviciosPost
+    ventaserviciosPost,
+    ventaserviciosPut, 
+    ventaserviciosDelete 
 };
