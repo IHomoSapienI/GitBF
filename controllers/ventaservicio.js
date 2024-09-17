@@ -7,9 +7,15 @@ const Detalleservicio = require('../modules/detalleservicio');
 // Obtener todos los servicios
 const ventaserviciosGet = async (req, res = response) => {
     try {
-        const ventaservicios = await Ventaservicio.find(); // Consultar todos los documentos de la colección y poblar tipoServicio
+        const ventaservicios = await Ventaservicio.find()
+            .populate({
+                path: 'detalle',
+                populate: {
+                    path: 'servicio', // Campo en Detalleservicio que referencia a Servicio
+                    model: 'Servicio' // Nombre del modelo de Servicio
+                }
+            });
 
-        // Si no hay servicios en la base de datos
         if (ventaservicios.length === 0) {
             return res.status(404).json({
                 msg: 'No se encontraron ventas de servicios en la base de datos'
@@ -29,27 +35,38 @@ const ventaserviciosGet = async (req, res = response) => {
 
 
 // Crear una nueva venta de servicio
+// Crear una nueva venta de servicio
 const ventaserviciosPost = async (req, res = response) => {
-    const { cita, detalle, cliente, duracion, precioTotal, estado } = req.body; // Extraer datos del cuerpo de la solicitud
+    const { cita, cliente, duracion, precioTotal, estado, detalle } = req.body;
 
-    // Validar los datos recibidos
-    if (!cita || !detalle || !cliente || !duracion || !precioTotal || estado === undefined) {
+    // Validar que los campos obligatorios estén presentes
+    if (!cita || !cliente || !duracion || !precioTotal || estado === undefined) {
+        console.log('Datos recibidos:', req.body);
         return res.status(400).json({
-            msg: 'Cita, detalle, cliente, duración, precio total y estado son obligatorios.'
+            msg: 'Cita, cliente, duración, precio total y estado son obligatorios.'
         });
     }
 
     try {
-        // Verificar si el detalle de servicio especificado existe
-        const existeDetalleServicio = await Detalleservicio.findById(detalle);
-        if (!existeDetalleServicio) {
-            return res.status(400).json({
-                msg: 'El detalle de servicio especificado no existe en la base de datos.'
-            });
+        // Verificar si el detalle de servicio es proporcionado y si existe
+        if (detalle) {
+            const existeDetalleServicio = await Detalleservicio.findById(detalle);
+            if (!existeDetalleServicio) {
+                return res.status(400).json({
+                    msg: 'El detalle de servicio especificado no existe en la base de datos.'
+                });
+            }
         }
 
         // Crear una nueva instancia del modelo Ventaservicio
-        const ventaservicio = new Ventaservicio({ cita, detalle, cliente, duracion, precioTotal, estado });
+        const ventaservicio = new Ventaservicio({
+            cita,
+            detalle: detalle || null, // Asignar null si detalle no está presente
+            cliente,
+            duracion,
+            precioTotal,
+            estado
+        });
 
         // Guardar la nueva venta de servicio en la base de datos
         await ventaservicio.save();
@@ -58,16 +75,26 @@ const ventaserviciosPost = async (req, res = response) => {
             ventaservicio
         });
     } catch (error) {
-        console.log(error);
+        console.error('Error al crear la venta de servicio:', error);
         res.status(500).json({
             msg: 'Error al crear la venta de servicio'
         });
     }
 };
+
 // Actualizar una venta existente
+
 const ventaserviciosPut = async (req, res = response) => {
     const { id } = req.params;
-    const { cita, detalle, cliente, duracion, precioTotal, estado } = req.body;
+    const { cita, cliente, duracion, precioTotal, estado, detalle } = req.body;
+
+    // Validar que los campos obligatorios estén presentes
+    if (!cita || !cliente || !duracion || !precioTotal || estado === undefined) {
+        console.log('Datos recibidos para actualizar:', req.body);
+        return res.status(400).json({
+            msg: 'Cita, cliente, duración, precio total y estado son obligatorios.'
+        });
+    }
 
     try {
         // Verificar si la venta existe
@@ -79,16 +106,18 @@ const ventaserviciosPut = async (req, res = response) => {
         }
 
         // Verificar si el detalle de servicio especificado existe
-        const existeDetalleServicio = await Detalleservicio.findById(detalle);
-        if (!existeDetalleServicio) {
-            return res.status(400).json({
-                msg: 'El detalle de servicio especificado no existe en la base de datos.'
-            });
+        if (detalle) {
+            const existeDetalleServicio = await Detalleservicio.findById(detalle);
+            if (!existeDetalleServicio) {
+                return res.status(400).json({
+                    msg: 'El detalle de servicio especificado no existe en la base de datos.'
+                });
+            }
         }
 
         // Actualizar la venta de servicio
         venta.cita = cita;
-        venta.detalle = detalle;
+        venta.detalle = detalle || null; // Asignar null si detalle no está presente
         venta.cliente = cliente;
         venta.duracion = duracion;
         venta.precioTotal = precioTotal;
@@ -100,7 +129,7 @@ const ventaserviciosPut = async (req, res = response) => {
             venta
         });
     } catch (error) {
-        console.log(error);
+        console.error('Error al actualizar la venta de servicio:', error);
         res.status(500).json({
             msg: 'Error al actualizar la venta de servicio'
         });
@@ -111,9 +140,7 @@ const ventaserviciosDelete = async (req, res = response) => {
     const { id } = req.params;
 
     try {
-        // Eliminar la venta de servicio por ID
         const result = await Ventaservicio.findByIdAndDelete(id);
-
         if (!result) {
             return res.status(404).json({
                 msg: 'Venta de servicio no encontrada'
@@ -124,13 +151,12 @@ const ventaserviciosDelete = async (req, res = response) => {
             msg: 'Venta de servicio eliminada correctamente'
         });
     } catch (error) {
-        console.log(error);
+        console.error('Error al eliminar la venta de servicio:', error);
         res.status(500).json({
             msg: 'Error al eliminar la venta de servicio'
         });
     }
 };
-
 module.exports = {
     ventaserviciosGet,
     ventaserviciosPost,

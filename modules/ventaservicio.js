@@ -1,32 +1,30 @@
 const { Schema, model } = require('mongoose');
 
-// Definición del esquema para servicios
 const VentaservicioSchema = Schema({
     cita: {
         type: String,
         required: true
     },
     detalle: {
-        type: Schema.Types.ObjectId, ref: 'detalleservicio'
+        type: Schema.Types.ObjectId,
+        ref: 'detalleservicio', // Referencia al modelo Detalleservicio
+        required: true
     },
     cliente: {
         type: String,
-        required: true,
-        
+        required: true
     },
     duracion: {
         type: Number,
-        required: true,
-        min: 0 // Asegura que el tiempo no sea negativo
+        required: true
     },
-    precioTotal: [{ 
-        type: Number,
-        required: true,
-        min: 0     }],
-
+    precioTotal: {
+        type: [Number], // Array de precios
+        required: true
+    },
     estado: {
         type: Boolean,
-        default: true // Por defecto el estado es activo
+        default: true
     }
 });
 
