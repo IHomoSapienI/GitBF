@@ -1,13 +1,12 @@
 const { response } = require('express');
 const Servicio = require('../modules/servicio');
-const TipoServicio = require('../modules/tiposerv'); // Importar el modelo TipoServicio
+const TipoServicio = require('../modules/tiposerv');
 
 // Obtener todos los servicios
 const serviciosGet = async (req, res = response) => {
     try {
-        const servicios = await Servicio.find(); // Consultar todos los documentos de la colección y poblar tipoServicio
+        const servicios = await Servicio.find().populate('tipoServicio'); // Poblamos el tipoServicio para obtener más detalles
 
-        // Si no hay servicios en la base de datos
         if (servicios.length === 0) {
             return res.status(404).json({
                 msg: 'No se encontraron servicios en la base de datos'
@@ -25,36 +24,10 @@ const serviciosGet = async (req, res = response) => {
     }
 };
 
-
-// Obtener detalles de un servicio específico
-const servicioDetalleGet = async (req, res = response) => {
-    const { id } = req.params;
-    try {
-        const servicio = await Servicio.findById(id).populate('tipoServicio');
-        if (!servicio) {
-            return res.status(404).json({
-                msg: 'Servicio no encontrado'
-            });
-        }
-        const detalles = await DetalleServicio.find({ servicio: id });
-        res.json({
-            servicio,
-            detalles
-        });
-    } catch (error) {
-        console.log(error);
-        res.status(500).json({
-            msg: 'Error al obtener el detalle del servicio'
-        });
-    }
-};
-
-
 // Crear un nuevo servicio
 const serviciosPost = async (req, res = response) => {
-    const { nombreServicio, descripcion, precio, tiempo, tipoServicio, estado } = req.body; // Extraer datos del cuerpo de la solicitud
+    const { nombreServicio, descripcion, precio, tiempo, tipoServicio, estado } = req.body;
 
-    // Validar los datos recibidos
     if (!nombreServicio || !descripcion || precio === undefined || tiempo === undefined || !tipoServicio || estado === undefined) {
         return res.status(400).json({
             msg: 'Nombre, descripción, precio, tiempo, tipo de servicio y estado son obligatorios.'
@@ -62,7 +35,6 @@ const serviciosPost = async (req, res = response) => {
     }
 
     try {
-        // Verificar si el tipo de servicio existe
         const existeTipoServicio = await TipoServicio.findById(tipoServicio);
         if (!existeTipoServicio) {
             return res.status(400).json({
@@ -70,10 +42,7 @@ const serviciosPost = async (req, res = response) => {
             });
         }
 
-        // Crear una nueva instancia del modelo Servicio
         const servicio = new Servicio({ nombreServicio, descripcion, precio, tiempo, tipoServicio, estado });
-
-        // Guardar el nuevo servicio en la base de datos
         await servicio.save();
         res.status(201).json({
             msg: 'Servicio creado correctamente',
@@ -87,8 +56,68 @@ const serviciosPost = async (req, res = response) => {
     }
 };
 
+// Actualizar un servicio
+const serviciosPut = async (req, res = response) => {
+    const { id } = req.params;
+    const { nombreServicio, descripcion, precio, tiempo, tipoServicio, estado } = req.body;
+
+    try {
+        const servicio = await Servicio.findById(id);
+
+        if (!servicio) {
+            return res.status(404).json({
+                msg: 'Servicio no encontrado'
+            });
+        }
+
+        // Actualizamos solo los campos que hayan sido proporcionados
+        servicio.nombreServicio = nombreServicio || servicio.nombreServicio;
+        servicio.descripcion = descripcion || servicio.descripcion;
+        servicio.precio = precio !== undefined ? precio : servicio.precio;
+        servicio.tiempo = tiempo !== undefined ? tiempo : servicio.tiempo;
+        servicio.tipoServicio = tipoServicio || servicio.tipoServicio;
+        servicio.estado = estado !== undefined ? estado : servicio.estado;
+
+        await servicio.save();
+        res.json({
+            msg: 'Servicio actualizado correctamente',
+            servicio
+        });
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({
+            msg: 'Error al actualizar el servicio'
+        });
+    }
+};
+
+// Eliminar un servicio
+const serviciosDelete = async (req, res = response) => {
+    const { id } = req.params;
+
+    try {
+        const servicio = await Servicio.findByIdAndDelete(id);
+
+        if (!servicio) {
+            return res.status(404).json({
+                msg: 'Servicio no encontrado'
+            });
+        }
+
+        res.json({
+            msg: 'Servicio eliminado correctamente'
+        });
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({
+            msg: 'Error al eliminar el servicio'
+        });
+    }
+};
+
 module.exports = {
     serviciosGet,
     serviciosPost,
-    servicioDetalleGet
+    serviciosPut,
+    serviciosDelete
 };
