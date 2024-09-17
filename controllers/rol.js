@@ -6,7 +6,8 @@ const Permiso = require('../modules/permiso');
 // Método GET para obtener los roles
 const rolesGet = async (req, res = response) => {
     try {
-        const roles = await Rol.find().populate('permisoRol', 'nombrePermiso');; // Consultar todos los documentos de la colección
+        const roles = await Rol.find().populate('permisoRol', 'nombrePermiso'); // Solo trae el campo nombrePermiso
+        res.json({ roles }); // Consultar todos los documentos de la colección
 
         if (roles.length === 0) {
             return res.status(404).json({
