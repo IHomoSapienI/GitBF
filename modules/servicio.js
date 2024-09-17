@@ -21,7 +21,7 @@ const ServicioSchema = Schema({
         min: 0 
     },
     tipoServicio: { 
-        type: Schema.Types.ObjectId, ref: 'TipoServicio'
+        type: Schema.Types.ObjectId, ref: 'TipoServ'
     },
     estado: {
         type: Boolean,

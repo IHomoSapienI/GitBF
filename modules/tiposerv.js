@@ -12,4 +12,4 @@ const TipoServicioSchema = Schema({
 
 })
 
-module.exports = model('TipoServicio', TipoServicioSchema);
+module.exports = model('TipoServ', TipoServicioSchema);
