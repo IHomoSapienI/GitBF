@@ -28,12 +28,12 @@ const detserviciosGet = async (req, res = response) => {
 
 // Crear un nuevo servicio
 const detserviciosPost = async (req, res = response) => {
-    const { servicio, cantidad, precioTotal } = req.body; // Extraer datos del cuerpo de la solicitud
+    const { servicio, precioTotal } = req.body; // Extraer datos del cuerpo de la solicitud
 
     // Validar los datos recibidos
-    if (!servicio || !cantidad || !precioTotal) {
+    if (!servicio || !precioTotal) {
         return res.status(400).json({
-            msg: 'Servicio, cantidad y precio total son obligatorios.'
+            msg: 'Servicio y precio total son obligatorios.'
         });
     }
 
@@ -47,7 +47,7 @@ const detserviciosPost = async (req, res = response) => {
         }
 
         // Crear una nueva instancia del modelo Detalleservicio
-        const detalleservicio = new Detalleservicio({ servicio, cantidad, precioTotal });
+        const detalleservicio = new Detalleservicio({ servicio, precioTotal });
 
         // Guardar el nuevo detalle de servicio en la base de datos
         await detalleservicio.save();

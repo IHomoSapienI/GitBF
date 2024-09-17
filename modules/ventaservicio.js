@@ -7,8 +7,8 @@ const VentaservicioSchema = Schema({
     },
     detalle: {
         type: Schema.Types.ObjectId,
-        ref: 'detalleservicio', // Referencia al modelo Detalleservicio
-        required: true
+        ref: 'Detalleservicio', // Referencia al modelo Detalleservicio
+        
     },
     cliente: {
         type: String,
@@ -19,7 +19,7 @@ const VentaservicioSchema = Schema({
         required: true
     },
     precioTotal: {
-        type: [Number], // Array de precios
+        type: Number, // Array de precios
         required: true
     },
     estado: {

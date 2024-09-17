@@ -12,7 +12,7 @@ const ventaserviciosGet = async (req, res = response) => {
                 path: 'detalle',
                 populate: {
                     path: 'servicio', // Campo en Detalleservicio que referencia a Servicio
-                    model: 'servicio' // Nombre del modelo de Servicio
+                    model: 'Servicio' // Nombre del modelo de Servicio
                 }
             });
 

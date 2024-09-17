@@ -8,25 +8,24 @@ const ServicioSchema = Schema({
     },
     descripcion: {
         type: String,
-        required: false // Opcionaal, puedes ajustarlo según tus necesidades
+        required: false 
     },
     precio: {
         type: Number,
         required: true,
-        min: 0 // Asegura que el precio no sea negativo
+        min: 0 
     },
     tiempo: {
         type: Number,
         required: true,
-        min: 0 // Asegura que el tiempo no sea negativo
+        min: 0 
     },
     tipoServicio: { 
-        type: Schema.Types.ObjectId, ref: 'Tiposerv'
-     },
-
+        type: Schema.Types.ObjectId, ref: 'tiposerv'
+    },
     estado: {
         type: Boolean,
-        default: true // Por defecto el estado es activo
+        default: true 
     }
 });
 
