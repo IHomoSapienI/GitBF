@@ -81,6 +81,7 @@ const usuariosPost = async(req, res = response) => {
 
 // Actualizar un usuario existente
 const usuariosPut = async (req, res = response) => {
+    const { id } = req.params;
     const { email, nombre, rol } = req.body;
 
     try {
@@ -93,7 +94,7 @@ const usuariosPut = async (req, res = response) => {
         }
 
         // Actualizar el usuario por su email
-        const usuario = await Usuario.findOneAndUpdate({ email }, { nombre, rol }, { new: true });
+        const usuario = await Usuario.findByIdAndUpdate(id, { nombre, rol }, { new: true });
 
         res.json({
             msg: 'Usuario Modificado correctamente',

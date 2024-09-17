@@ -2,6 +2,7 @@ const { Router} = require('express')
 
 const router = Router()
 
+
 const {usuariosGet, usuariosPost, usuariosPut, usuariosDelete, PromGet} = require('../controllers/usuario');
 
 router.get('/', usuariosGet)
@@ -10,8 +11,8 @@ router.get('/promedio', PromGet)
 
 router.post('/', usuariosPost)
 
-router.put('/', usuariosPut)
+router.put('/:id', usuariosPut)
 
-router.delete('/api/usuarios/:id', usuariosDelete)
+router.delete('/:id', usuariosDelete)
 
 module.exports = router
