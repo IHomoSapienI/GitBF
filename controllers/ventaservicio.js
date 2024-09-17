@@ -12,7 +12,7 @@ const ventaserviciosGet = async (req, res = response) => {
                 path: 'detalle',
                 populate: {
                     path: 'servicio', // Campo en Detalleservicio que referencia a Servicio
-                    model: 'Servicio' // Nombre del modelo de Servicio
+                    model: 'servicio' // Nombre del modelo de Servicio
                 }
             });
 
@@ -75,12 +75,10 @@ const ventaserviciosPost = async (req, res = response) => {
 };
 
 // Actualizar una venta existente
-
 const ventaserviciosPut = async (req, res = response) => {
     const { id } = req.params;
     const { cita, cliente, duracion, precioTotal, estado, detalle } = req.body;
 
-    // Validar que los campos obligatorios estén presentes
     if (!cita || !cliente || !duracion || !precioTotal || estado === undefined) {
         console.log('Datos recibidos para actualizar:', req.body);
         return res.status(400).json({
@@ -89,7 +87,6 @@ const ventaserviciosPut = async (req, res = response) => {
     }
 
     try {
-        // Verificar si la venta existe
         const venta = await Ventaservicio.findById(id);
         if (!venta) {
             return res.status(404).json({
@@ -97,7 +94,6 @@ const ventaserviciosPut = async (req, res = response) => {
             });
         }
 
-        // Verificar si el detalle de servicio especificado existe
         if (detalle) {
             const existeDetalleServicio = await Detalleservicio.findById(detalle);
             if (!existeDetalleServicio) {
@@ -107,9 +103,8 @@ const ventaserviciosPut = async (req, res = response) => {
             }
         }
 
-        // Actualizar la venta de servicio
         venta.cita = cita;
-        venta.detalle = detalle || null; // Asignar null si detalle no está presente
+        venta.detalle = detalle || null;
         venta.cliente = cliente;
         venta.duracion = duracion;
         venta.precioTotal = precioTotal;
@@ -149,6 +144,7 @@ const ventaserviciosDelete = async (req, res = response) => {
         });
     }
 };
+
 module.exports = {
     ventaserviciosGet,
     ventaserviciosPost,
