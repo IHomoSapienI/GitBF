@@ -12,6 +12,6 @@ router.post('/', usuariosPost)
 
 router.put('/', usuariosPut)
 
-router.delete('/', usuariosDelete)
+router.delete('/api/usuarios/:id', usuariosDelete)
 
 module.exports = router

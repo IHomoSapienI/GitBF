@@ -109,19 +109,37 @@ const usuariosPut = async (req, res = response) => {
 };
 
 const usuariosDelete = async (req, res = response) => {
-    const { email } = req.query; // Obtén el email de la consulta
+    const { id } = req.params; // Obtener el ID del parámetro de la ruta
 
     try {
-        const usuario = await Usuario.findOneAndDelete({ email });
-        if (!usuario) {
-            return res.status(404).json({ msg: 'Usuario no encontrado' });
+        if (!id) {
+            return res.status(400).json({
+                msg: 'El ID es necesario para eliminar el usuario'
+            });
         }
-        res.json({ msg: 'Usuario eliminado correctamente', usuario });
+
+        const usuario = await Usuario.findByIdAndDelete(id);
+
+        if (!usuario) {
+            return res.status(404).json({
+                msg: 'Usuario no encontrado'
+            });
+        }
+
+        res.json({
+            msg: 'Usuario Eliminado',
+            usuario
+        });
     } catch (error) {
-        console.error('Error al eliminar usuario:', error);
-        res.status(500).json({ msg: 'Error al eliminar usuario', error });
+        console.error(error);
+        res.status(500).json({
+            msg: 'Error al eliminar usuario',
+            error
+        });
     }
 };
+
+
 
 
 module.exports ={
