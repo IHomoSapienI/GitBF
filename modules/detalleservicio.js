@@ -2,7 +2,7 @@ const { Schema, model } = require('mongoose');
 
 const DetalleservicioSchema = Schema({
     servicio: {
-        type: Schema.Types.ObjectId, ref: 'servicio' 
+        type: Schema.Types.ObjectId, ref: 'Servicio' 
     },   
     cantidad: {
         type: Number,

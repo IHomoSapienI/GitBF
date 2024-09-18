@@ -5,7 +5,9 @@ const Detalleservicio = require('../modules/detalleservicio');
 
 
 // Obtener todos los servicios
-const ventaserviciosGet = async (req, res = response) => {
+// Obtener todos los servicios
+// Ejemplo de uso
+const ventaserviciosGet = async (req, res) => {
     try {
         const ventaservicios = await Ventaservicio.find()
             .populate({
@@ -32,14 +34,10 @@ const ventaserviciosGet = async (req, res = response) => {
         });
     }
 };
-
-
-// Crear una nueva venta de servicio
 // Crear una nueva venta de servicio
 const ventaserviciosPost = async (req, res = response) => {
     const { cita, detalle, cliente, duracion, precioTotal, estado } = req.body;
 
-    // Validar los datos recibidos
     if (!cita || !cliente || !duracion || !precioTotal || estado === undefined) {
         return res.status(400).json({
             msg: 'Cita, cliente, duración, precio total y estado son obligatorios.'
@@ -47,7 +45,6 @@ const ventaserviciosPost = async (req, res = response) => {
     }
 
     try {
-        // Verificar si el detalle de servicio especificado existe, solo si 'detalle' está presente
         if (detalle) {
             const existeDetalleServicio = await Detalleservicio.findById(detalle);
             if (!existeDetalleServicio) {
@@ -57,10 +54,8 @@ const ventaserviciosPost = async (req, res = response) => {
             }
         }
 
-        // Crear una nueva instancia del modelo Ventaservicio
         const ventaservicio = new Ventaservicio({ cita, detalle, cliente, duracion, precioTotal, estado });
 
-        // Guardar la nueva venta de servicio en la base de datos
         await ventaservicio.save();
         res.status(201).json({
             msg: 'Venta de servicio creada correctamente',
