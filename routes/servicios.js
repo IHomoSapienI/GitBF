@@ -9,11 +9,23 @@ const storage = multer.diskStorage({
         cb(null, 'uploads/'); // Carpeta donde se guardarán las imágenes
     },
     filename: function (req, file, cb) {
-        cb(null, Date.now() + file.originalname); // Renombra el archivo
+        cb(null, Date.now() + path.extname(file.originalname)); // Renombra el archivo con extensión
     }
 });
 
-const upload = multer({ storage: storage });
+const upload = multer({ 
+    storage: storage,
+    fileFilter: (req, file, cb) => {
+        const filetypes = /jpeg|jpg|png|gif/; // Tipos permitidos
+        const mimetype = filetypes.test(file.mimetype);
+        const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
+
+        if (mimetype && extname) {
+            return cb(null, true);
+        }
+        cb('Error: Archivo no permitido.'); // Error si no es un archivo permitido
+    }
+});
 
 // Rutas
 router.get('/', serviciosGet);
