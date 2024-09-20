@@ -36,7 +36,11 @@ class Server {
         this.app.use(bodyParser.json()); // for parsing application/json
 
         this.app.use(express.static(path.join(__dirname, '../frontend/public'))); // Servir archivos estáticos del frontend
-        this.app.use(express.static('uploads')); // Para servir los archivos subidos
+        // Para servir los archivos subidos
+        this.app.use(express.static('uploads'));
+        this.app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+
+         
     }
 
     routes() {
