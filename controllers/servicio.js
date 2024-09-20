@@ -26,11 +26,11 @@ const serviciosGet = async (req, res = response) => {
 
 // Crear un nuevo servicio
 const serviciosPost = async (req, res = response) => {
-    const { nombreServicio, descripcion, precio, tiempo, tipoServicio, estado } = req.body;
+    const { nombreServicio, descripcion, precio, tiempo, tipoServicio, estado, imagenUrl } = req.body; // Agregamos imagenUrl
 
-    if (!nombreServicio || !descripcion || precio === undefined || tiempo === undefined || !tipoServicio || estado === undefined) {
+    if (!nombreServicio || !descripcion || precio === undefined || tiempo === undefined || !tipoServicio || estado === undefined || !imagenUrl) {
         return res.status(400).json({
-            msg: 'Nombre, descripción, precio, tiempo, tipo de servicio y estado son obligatorios.'
+            msg: 'Nombre, descripción, precio, tiempo, tipo de servicio, estado e imagen son obligatorios.'
         });
     }
 
@@ -42,7 +42,7 @@ const serviciosPost = async (req, res = response) => {
             });
         }
 
-        const servicio = new Servicio({ nombreServicio, descripcion, precio, tiempo, tipoServicio, estado });
+        const servicio = new Servicio({ nombreServicio, descripcion, precio, tiempo, tipoServicio, estado, imagenUrl });
         await servicio.save();
         res.status(201).json({
             msg: 'Servicio creado correctamente',
@@ -59,7 +59,7 @@ const serviciosPost = async (req, res = response) => {
 // Actualizar un servicio
 const serviciosPut = async (req, res = response) => {
     const { id } = req.params;
-    const { nombreServicio, descripcion, precio, tiempo, tipoServicio, estado } = req.body;
+    const { nombreServicio, descripcion, precio, tiempo, tipoServicio, estado, imagenUrl } = req.body; // Agregamos imagenUrl
 
     try {
         const servicio = await Servicio.findById(id);
@@ -77,6 +77,7 @@ const serviciosPut = async (req, res = response) => {
         servicio.tiempo = tiempo !== undefined ? tiempo : servicio.tiempo;
         servicio.tipoServicio = tipoServicio || servicio.tipoServicio;
         servicio.estado = estado !== undefined ? estado : servicio.estado;
+        servicio.imagenUrl = imagenUrl || servicio.imagenUrl; // Actualizamos la imagenUrl
 
         await servicio.save();
         res.json({

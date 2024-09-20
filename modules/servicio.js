@@ -26,6 +26,10 @@ const ServicioSchema = Schema({
     estado: {
         type: Boolean,
         default: true 
+    },
+    imagenUrl: { // Nuevo campo para la URL de la imagen
+        type: String,
+        required: true // Hacemos que sea requerido, puedes cambiarlo según tus necesidades
     }
 });
 
