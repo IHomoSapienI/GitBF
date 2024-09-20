@@ -60,7 +60,7 @@ class Server {
 
         this.app.use(bodyParser.json()); // for parsing application/json
 
-        this.app.use(express.static(__dirname + "/public"));
+        this.app.use(express.static(__dirname + "/../frontend/public"));
         this.app.use(express.static('uploads')); // Para servir los archivos subidos
     }
 
@@ -75,9 +75,9 @@ class Server {
         this.app.use(this.authPath, require('../routes/auth'));
 
         // Ruta para servir React frontend
-        this.app.get('/*', (req, res) => {
-            res.sendFile(__dirname + '/public/index.html');
-        });
+        /*this.app.get('/*', (req, res) => {
+            res.sendFile(__dirname + '/../frontend/public/index.html');
+        });*/
     }
 
     async connectDb() {
