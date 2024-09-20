@@ -2,7 +2,7 @@ const { Router } = require('express');
 const router = Router();
 const { serviciosGet, serviciosPost, serviciosPut, serviciosDelete } = require('../controllers/servicio');
 const multer = require('multer');
-
+const path = require('path');
 // Configuración de multer para la subida de imágenes
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
