@@ -26,13 +26,15 @@ const serviciosGet = async (req, res = response) => {
 
 // Crear un nuevo servicio
 const serviciosPost = async (req, res = response) => {
-    const { nombreServicio, descripcion, precio, tiempo, tipoServicio, estado, imagenUrl } = req.body; // Agregamos imagenUrl
+    const { nombreServicio, descripcion, precio, tiempo, tipoServicio, estado } = req.body;
 
-    if (!nombreServicio || !descripcion || precio === undefined || tiempo === undefined || !tipoServicio || estado === undefined || !imagenUrl) {
+    if (!nombreServicio || !descripcion || precio === undefined || tiempo === undefined || !tipoServicio || estado === undefined || !req.file) {
         return res.status(400).json({
             msg: 'Nombre, descripción, precio, tiempo, tipo de servicio, estado e imagen son obligatorios.'
         });
     }
+
+    const imagenUrl = req.file.path; // Obtén la URL de la imagen
 
     try {
         const existeTipoServicio = await TipoServicio.findById(tipoServicio);
