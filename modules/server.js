@@ -15,6 +15,7 @@ class Server {
         this.serviciosPath = '/api/servicios';
         this.detalleserviciosPath = '/api/detalleservicios';
         this.ventaserviciosPath = '/api/ventaservicios';
+        this.insumosPath = '/api/insumos';
         this.authPath = '/api/auth';
         this.middlewares();
         this.routes();
@@ -51,6 +52,7 @@ class Server {
         this.app.use(this.serviciosPath, require('../routes/servicios')); // Asegúrate de que esta ruta use multer
         this.app.use(this.detalleserviciosPath, require('../routes/detalleservicios'));
         this.app.use(this.ventaserviciosPath, require('../routes/ventaservicios'));
+        this.app.use(this.insumosPath, require('../routes/insumos'));
         this.app.use(this.authPath, require('../routes/auth'));
     }
 
