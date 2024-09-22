@@ -16,7 +16,7 @@ class Server {
         this.detalleserviciosPath = '/api/detalleservicios';
         this.ventaserviciosPath = '/api/ventaservicios';
         this.insumosPath = '/api/insumos';
-        this.bajaproductosPath = '/api/bajaproductos';
+        this.empleadosPath = '/api/empleados';
         this.authPath = '/api/auth';
         this.middlewares();
         this.routes();
@@ -41,8 +41,6 @@ class Server {
         // Para servir los archivos subidos
         this.app.use(express.static('uploads'));
         this.app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
-
-         
     }
 
     routes() {
@@ -54,7 +52,7 @@ class Server {
         this.app.use(this.detalleserviciosPath, require('../routes/detalleservicios'));
         this.app.use(this.ventaserviciosPath, require('../routes/ventaservicios'));
         this.app.use(this.insumosPath, require('../routes/insumos'));
-        this.app.use(this.bajaproductosPath, require('../routes/bajaproductos'));
+        this.app.use(this.empleadosPath, require('../routes/empleados'));
         this.app.use(this.authPath, require('../routes/auth'));
     }
 
