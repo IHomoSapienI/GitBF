@@ -18,6 +18,7 @@ class Server {
         this.insumosPath = '/api/insumos';
         this.empleadosPath = '/api/empleados';
         this.clientesPath = '/api/clientes';
+        this.citasPath = '/api/citas';
         this.authPath = '/api/auth';
         this.middlewares();
         this.routes();
@@ -55,6 +56,7 @@ class Server {
         this.app.use(this.insumosPath, require('../routes/insumos'));
         this.app.use(this.empleadosPath, require('../routes/empleados'));
         this.app.use(this.clientesPath, require('../routes/clientes'));
+        this.app.use(this.citasPath, require('../routes/citas'));
         this.app.use(this.authPath, require('../routes/auth'));
     }
 
