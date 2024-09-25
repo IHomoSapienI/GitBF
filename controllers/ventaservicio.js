@@ -38,8 +38,9 @@ const ventaserviciosGet = async (req, res) => {
 
 // Crear una nueva venta de servicio
 const ventaserviciosPost = async (req, res = response) => {
-    const { cita, detalle, cliente, duracion, precioTotal, estado } = req.body;
+    const { cita, cliente, duracion, precioTotal, estado } = req.body;
 
+    // Validar campos obligatorios
     if (!cita || !cliente || !duracion || !precioTotal || estado === undefined) {
         return res.status(400).json({
             msg: 'Cita, cliente, duración, precio total y estado son obligatorios.'
@@ -62,16 +63,14 @@ const ventaserviciosPost = async (req, res = response) => {
             });
         }
 
-        if (detalle) {
-            const existeDetalleServicio = await Detalleservicio.findById(detalle);
-            if (!existeDetalleServicio) {
-                return res.status(400).json({
-                    msg: 'El detalle de servicio especificado no existe en la base de datos.'
-                });
-            }
-        }
-
-        const ventaservicio = new Ventaservicio({ cita, detalle, cliente, duracion, precioTotal, estado });
+        // Crear la venta de servicio sin el campo detalle
+        const ventaservicio = new Ventaservicio({ 
+            cita, 
+            cliente, 
+            duracion, 
+            precioTotal, 
+            estado 
+        });
 
         await ventaservicio.save();
         res.status(201).json({
@@ -89,8 +88,9 @@ const ventaserviciosPost = async (req, res = response) => {
 // Actualizar una venta existente
 const ventaserviciosPut = async (req, res = response) => {
     const { id } = req.params;
-    const { cita, cliente, duracion, precioTotal, estado, detalle } = req.body;
+    const { cita, cliente, duracion, precioTotal, estado } = req.body;
 
+    // Validar campos obligatorios
     if (!cita || !cliente || !duracion || !precioTotal || estado === undefined) {
         console.log('Datos recibidos para actualizar:', req.body);
         return res.status(400).json({
@@ -121,18 +121,8 @@ const ventaserviciosPut = async (req, res = response) => {
             });
         }
 
-        if (detalle) {
-            const existeDetalleServicio = await Detalleservicio.findById(detalle);
-            if (!existeDetalleServicio) {
-                return res.status(400).json({
-                    msg: 'El detalle de servicio especificado no existe en la base de datos.'
-                });
-            }
-        }
-
-        // Actualizar los campos de la venta
+        // Actualizar los campos de la venta sin el campo detalle
         venta.cita = cita;
-        venta.detalle = detalle || null;
         venta.cliente = cliente;
         venta.duracion = duracion;
         venta.precioTotal = precioTotal;
