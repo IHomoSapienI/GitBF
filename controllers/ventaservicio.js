@@ -2,11 +2,9 @@ const { response } = require('express');
 const mongoose = require('mongoose');
 const Ventaservicio = require('../modules/ventaservicio'); 
 const Detalleservicio = require('../modules/detalleservicio');
-
+const Cita = require('../modules/cita'); // Importamos el modelo Cita
 
 // Obtener todos los servicios
-// Obtener todos los servicios
-// Ejemplo de uso
 const ventaserviciosGet = async (req, res) => {
     try {
         const ventaservicios = await Ventaservicio.find()
@@ -16,7 +14,8 @@ const ventaserviciosGet = async (req, res) => {
                     path: 'servicio', // Campo en Detalleservicio que referencia a Servicio
                     model: 'Servicio' // Nombre del modelo de Servicio
                 }
-            });
+            })
+            .populate('cita'); // Agregar populate para la cita
 
         if (ventaservicios.length === 0) {
             return res.status(404).json({
@@ -34,6 +33,7 @@ const ventaserviciosGet = async (req, res) => {
         });
     }
 };
+
 // Crear una nueva venta de servicio
 const ventaserviciosPost = async (req, res = response) => {
     const { cita, detalle, cliente, duracion, precioTotal, estado } = req.body;
@@ -45,6 +45,14 @@ const ventaserviciosPost = async (req, res = response) => {
     }
 
     try {
+        // Verificar que la cita exista
+        const existeCita = await Cita.findById(cita);
+        if (!existeCita) {
+            return res.status(400).json({
+                msg: 'La cita especificada no existe en la base de datos.'
+            });
+        }
+
         if (detalle) {
             const existeDetalleServicio = await Detalleservicio.findById(detalle);
             if (!existeDetalleServicio) {
@@ -86,6 +94,14 @@ const ventaserviciosPut = async (req, res = response) => {
         if (!venta) {
             return res.status(404).json({
                 msg: 'Venta de servicio no encontrada'
+            });
+        }
+
+        // Verificar que la cita exista
+        const existeCita = await Cita.findById(cita);
+        if (!existeCita) {
+            return res.status(400).json({
+                msg: 'La cita especificada no existe en la base de datos.'
             });
         }
 
