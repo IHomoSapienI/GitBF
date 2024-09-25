@@ -1,7 +1,6 @@
 const { response } = require('express');
 const mongoose = require('mongoose');
 const Ventaservicio = require('../modules/ventaservicio'); 
-const Detalleservicio = require('../modules/detalleservicio');
 const Cita = require('../modules/cita');
 const Cliente = require('../modules/cliente'); // Importar el modelo Cliente
 
@@ -9,13 +8,6 @@ const Cliente = require('../modules/cliente'); // Importar el modelo Cliente
 const ventaserviciosGet = async (req, res) => {
     try {
         const ventaservicios = await Ventaservicio.find()
-            .populate({
-                path: 'detalle',
-                populate: {
-                    path: 'servicio',
-                    model: 'Servicio' // Nombre del modelo de Servicio
-                }
-            })
             .populate('cita')
             .populate('cliente'); // Agregar populate para el cliente
 
@@ -121,7 +113,7 @@ const ventaserviciosPut = async (req, res = response) => {
             });
         }
 
-        // Actualizar los campos de la venta sin el campo detalle
+        // Actualizar los campos de la venta
         venta.cita = cita;
         venta.cliente = cliente;
         venta.duracion = duracion;
