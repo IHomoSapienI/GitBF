@@ -9,11 +9,12 @@ const VentaservicioSchema = Schema({
     detalle: {
         type: Schema.Types.ObjectId,
         ref: 'Detalleservicio',
-        require: false
+        require: true
     },
     cliente: {
-        type: String,
-        required: true
+        type: Schema.Types.ObjectId,
+        ref: 'Cliente',
+        require: true
     },
     duracion: {
         type: Number,

@@ -2,7 +2,8 @@ const { response } = require('express');
 const mongoose = require('mongoose');
 const Ventaservicio = require('../modules/ventaservicio'); 
 const Detalleservicio = require('../modules/detalleservicio');
-const Cita = require('../modules/cita'); // Importamos el modelo Cita
+const Cita = require('../modules/cita');
+const Cliente = require('../modules/cliente'); // Importar el modelo Cliente
 
 // Obtener todos los servicios
 const ventaserviciosGet = async (req, res) => {
@@ -11,11 +12,12 @@ const ventaserviciosGet = async (req, res) => {
             .populate({
                 path: 'detalle',
                 populate: {
-                    path: 'servicio', // Campo en Detalleservicio que referencia a Servicio
+                    path: 'servicio',
                     model: 'Servicio' // Nombre del modelo de Servicio
                 }
             })
-            .populate('cita'); // Agregar populate para la cita
+            .populate('cita')
+            .populate('cliente'); // Agregar populate para el cliente
 
         if (ventaservicios.length === 0) {
             return res.status(404).json({
@@ -45,11 +47,18 @@ const ventaserviciosPost = async (req, res = response) => {
     }
 
     try {
-        // Verificar que la cita exista
+        // Verificar que la cita y el cliente existan
         const existeCita = await Cita.findById(cita);
         if (!existeCita) {
             return res.status(400).json({
                 msg: 'La cita especificada no existe en la base de datos.'
+            });
+        }
+
+        const existeCliente = await Cliente.findById(cliente); // Verificar que el cliente exista
+        if (!existeCliente) {
+            return res.status(400).json({
+                msg: 'El cliente especificado no existe en la base de datos.'
             });
         }
 
@@ -97,11 +106,18 @@ const ventaserviciosPut = async (req, res = response) => {
             });
         }
 
-        // Verificar que la cita exista
+        // Verificar que la cita y el cliente existan
         const existeCita = await Cita.findById(cita);
         if (!existeCita) {
             return res.status(400).json({
                 msg: 'La cita especificada no existe en la base de datos.'
+            });
+        }
+
+        const existeCliente = await Cliente.findById(cliente); // Verificar que el cliente exista
+        if (!existeCliente) {
+            return res.status(400).json({
+                msg: 'El cliente especificado no existe en la base de datos.'
             });
         }
 
@@ -114,6 +130,7 @@ const ventaserviciosPut = async (req, res = response) => {
             }
         }
 
+        // Actualizar los campos de la venta
         venta.cita = cita;
         venta.detalle = detalle || null;
         venta.cliente = cliente;
