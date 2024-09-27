@@ -61,7 +61,8 @@ const ventaserviciosPost = async (req, res = response) => {
             cliente, 
             duracion, 
             precioTotal, 
-            estado 
+            estado,
+            servicios
         });
 
         await ventaservicio.save();
