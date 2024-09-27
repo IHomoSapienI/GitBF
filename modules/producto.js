@@ -11,6 +11,10 @@ const ProductoSchema = Schema({
         required: true,
         min: 0
     },
+    stock: {
+        type: String,
+        required: true
+    },
     categoria: { 
         type: Schema.Types.ObjectId, 
         ref: 'CatProducto', // Referencia al esquema de categorías de productos

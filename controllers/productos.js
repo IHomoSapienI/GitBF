@@ -1,89 +1,61 @@
-const Producto = require('../modules/producto');
-const CategoriaProducto = require('../modules/categoriaproducto');
-
-// Crear un nuevo producto
-const crearProducto = async (req, res) => {
-    const { nombreProducto, precio, categoria, imagenUrl } = req.body;
-
-    try {
-        // Verificar que la categoría exista
-        const categoriaExistente = await CategoriaProducto.findById(categoria);
-        if (!categoriaExistente) {
-            return res.status(400).json({
-                msg: 'La categoría especificada no existe'
-            });
-        }
-
-        // Crear un nuevo producto
-        const nuevoProducto = new Producto({ nombreProducto, precio, categoria, imagenUrl });
-        await nuevoProducto.save();
-
-        res.status(201).json(nuevoProducto);
-    } catch (error) {
-        console.error('Error al crear el producto:', error);
-        res.status(500).json({ msg: 'Error en el servidor al crear el producto' });
-    }
-};
+const Producto = require('../modules/producto'); // Asegúrate de que la ruta sea correcta
 
 // Obtener todos los productos
 const obtenerProductos = async (req, res) => {
     try {
-        const productos = await Producto.find().populate('categoria', 'nombreCp');
-        res.json(productos);
+        const productos = await Producto.find().populate('categoria', 'nombreCategoria'); // Asegúrate de que el campo nombreCategoria exista en tu esquema CatProducto
+        res.status(200).json({ productos });
     } catch (error) {
         console.error('Error al obtener productos:', error);
-        res.status(500).json({ msg: 'Error en el servidor al obtener productos' });
+        res.status(500).json({ message: 'Error al obtener productos' });
     }
 };
 
-// Obtener un producto por ID
-const obtenerProductoPorId = async (req, res) => {
-    const { id } = req.params;
-    
+// Crear un nuevo producto
+const crearProducto = async (req, res) => {
+    const { nombreProducto, precio, stock, categoria, estado, imagenUrl } = req.body;
+
     try {
-        const producto = await Producto.findById(id).populate('categoria', 'nombreCp');
-        if (!producto) {
-            return res.status(404).json({ msg: 'Producto no encontrado' });
-        }
-        res.json(producto);
+        const nuevoProducto = new Producto({
+            nombreProducto,
+            precio,
+            stock,
+            categoria,
+            estado,
+            imagenUrl
+        });
+
+        const productoGuardado = await nuevoProducto.save();
+        res.status(201).json({ producto: productoGuardado });
     } catch (error) {
-        console.error('Error al obtener el producto:', error);
-        res.status(500).json({ msg: 'Error en el servidor al obtener el producto' });
+        console.error('Error al crear producto:', error);
+        res.status(500).json({ message: 'Error al crear producto' });
     }
 };
 
 // Actualizar un producto
 const actualizarProducto = async (req, res) => {
     const { id } = req.params;
-    const { nombreProducto, precio, categoria, imagenUrl } = req.body;
+    const { nombreProducto, precio, stock, categoria, estado, imagenUrl } = req.body;
 
     try {
-        // Verificar que el producto exista
-        let producto = await Producto.findById(id);
-        if (!producto) {
-            return res.status(404).json({ msg: 'Producto no encontrado' });
+        const productoActualizado = await Producto.findByIdAndUpdate(id, {
+            nombreProducto,
+            precio,
+            stock,
+            categoria,
+            estado,
+            imagenUrl
+        }, { new: true });
+
+        if (!productoActualizado) {
+            return res.status(404).json({ message: 'Producto no encontrado' });
         }
 
-        // Verificar que la categoría exista
-        const categoriaExistente = await CategoriaProducto.findById(categoria);
-        if (!categoriaExistente) {
-            return res.status(400).json({
-                msg: 'La categoría especificada no existe'
-            });
-        }
-
-        // Actualizar el producto
-        producto.nombreProducto = nombreProducto;
-        producto.precio = precio;
-        producto.categoria = categoria;
-        producto.imagenUrl = imagenUrl;
-
-        await producto.save();
-
-        res.json(producto);
+        res.status(200).json({ producto: productoActualizado });
     } catch (error) {
-        console.error('Error al actualizar el producto:', error);
-        res.status(500).json({ msg: 'Error en el servidor al actualizar el producto' });
+        console.error('Error al actualizar producto:', error);
+        res.status(500).json({ message: 'Error al actualizar producto' });
     }
 };
 
@@ -92,23 +64,22 @@ const eliminarProducto = async (req, res) => {
     const { id } = req.params;
 
     try {
-        const producto = await Producto.findById(id);
-        if (!producto) {
-            return res.status(404).json({ msg: 'Producto no encontrado' });
+        const productoEliminado = await Producto.findByIdAndDelete(id);
+        if (!productoEliminado) {
+            return res.status(404).json({ message: 'Producto no encontrado' });
         }
 
-        await producto.remove();
-        res.json({ msg: 'Producto eliminado correctamente' });
+        res.status(200).json({ message: 'Producto eliminado' });
     } catch (error) {
-        console.error('Error al eliminar el producto:', error);
-        res.status(500).json({ msg: 'Error en el servidor al eliminar el producto' });
+        console.error('Error al eliminar producto:', error);
+        res.status(500).json({ message: 'Error al eliminar producto' });
     }
 };
 
+
 module.exports = {
-    crearProducto,
     obtenerProductos,
-    obtenerProductoPorId,
+    crearProducto,
     actualizarProducto,
     eliminarProducto
 };

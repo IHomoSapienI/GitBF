@@ -3,7 +3,7 @@ const { Schema, model } = require('mongoose');
 const VentaProductoSchema = Schema({
     nombreProducto: {
         type: Schema.Types.ObjectId,
-        ref: 'Producto', // Se refiere al modelo de productos
+        ref: 'Producto',  // Relación con el modelo de Producto
         required: true
     },
     nombreCliente: {
@@ -16,7 +16,7 @@ const VentaProductoSchema = Schema({
     },
     precio: {
         type: Number,
-        required: true
+        required: true  // El precio se obtendrá del producto seleccionado
     },
     cantidad: {
         type: Number,
@@ -32,8 +32,20 @@ const VentaProductoSchema = Schema({
     },
     estado: {
         type: Boolean,
-        default: true
+        default: true  // Completado o pendiente
+    },
+    fechaVenta: {
+        type: Date,
+        default: Date.now
     }
+});
+
+// Middleware para calcular el subtotal antes de guardar la venta
+VentaProductoSchema.pre('save', async function (next) {
+    if (this.isModified('cantidad') || this.isModified('precio')) {
+        this.subtotal = this.cantidad * this.precio;  // Cálculo del subtotal
+    }
+    next();
 });
 
 module.exports = model('VentaProducto', VentaProductoSchema);

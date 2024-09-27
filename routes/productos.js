@@ -1,21 +1,17 @@
 const { Router } = require('express');
-const { crearProducto, obtenerProductos, obtenerProductoPorId, actualizarProducto, eliminarProducto } = require('../controllers/productos');
+const {
+    obtenerProductos,
+    crearProducto,
+    actualizarProducto,
+    eliminarProducto
+} = require('../controllers/productos'); // Asegúrate de que la ruta sea correcta
 
 const router = Router();
 
-// Crear un nuevo producto
-router.post('/', crearProducto);
-
-// Obtener todos los productos
-router.get('/', obtenerProductos);
-
-// Obtener un producto por ID
-router.get('/:id', obtenerProductoPorId);
-
-// Actualizar un producto
-router.put('/:id', actualizarProducto);
-
-// Eliminar un producto
-router.delete('/:id', eliminarProducto);
+// Definición de las rutas
+router.get('/', obtenerProductos); // Obtener todos los productos
+router.post('/', crearProducto); // Crear un nuevo producto
+router.put('/:id', actualizarProducto); // Actualizar un producto
+router.delete('/:id', eliminarProducto); // Eliminar un producto
 
 module.exports = router;
