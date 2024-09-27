@@ -10,7 +10,7 @@ const ventaserviciosGet = async (req, res) => {
         const ventaservicios = await Ventaservicio.find()
             .populate('cita')
             .populate('cliente') // Agregar populate para el cliente
-            .populate('servicio');
+            .populate('servicios');
         if (ventaservicios.length === 0) {
             return res.status(404).json({
                 msg: 'No se encontraron ventas de servicios en la base de datos'
