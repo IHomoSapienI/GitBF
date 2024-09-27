@@ -3,14 +3,14 @@ const mongoose = require('mongoose');
 const Ventaservicio = require('../modules/ventaservicio'); 
 const Cita = require('../modules/cita');
 const Cliente = require('../modules/cliente'); // Importar el modelo Cliente
-
+const Servicio = require('../modules/servicio');
 // Obtener todos los servicios
 const ventaserviciosGet = async (req, res) => {
     try {
         const ventaservicios = await Ventaservicio.find()
             .populate('cita')
-            .populate('cliente'); // Agregar populate para el cliente
-
+            .populate('cliente') // Agregar populate para el cliente
+            .populate('servicio');
         if (ventaservicios.length === 0) {
             return res.status(404).json({
                 msg: 'No se encontraron ventas de servicios en la base de datos'

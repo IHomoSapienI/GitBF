@@ -15,6 +15,10 @@ const VentaservicioSchema = Schema({
         type: Number,
         required: true
     },
+    servicios: [{ 
+        type: Schema.Types.ObjectId, 
+        ref: 'Servicio' // Este es el campo que referencia el modelo Servicio
+    }],
     precioTotal: {
         type: Number, // Precio total de la venta
         required: true
