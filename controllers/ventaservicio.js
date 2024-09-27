@@ -1,25 +1,25 @@
 const { response } = require('express');
-const mongoose = require('mongoose');
 const Ventaservicio = require('../modules/ventaservicio'); 
 const Cita = require('../modules/cita');
-const Cliente = require('../modules/cliente'); // Importar el modelo Cliente
-const Servicio = require('../modules/servicio');
+const Cliente = require('../modules/cliente'); 
+
 // Obtener todos los servicios
 const ventaserviciosGet = async (req, res) => {
     try {
         const ventaservicios = await Ventaservicio.find()
-            .populate('cita')
-            .populate('cliente') // Agregar populate para el cliente
-            .populate('servicios');
+            .populate({
+                path: 'cita',
+                populate: { path: 'servicios' } // Popula los servicios a través de la cita
+            })
+            .populate('cliente');
+
         if (ventaservicios.length === 0) {
             return res.status(404).json({
                 msg: 'No se encontraron ventas de servicios en la base de datos'
             });
         }
 
-        res.json({
-            ventaservicios
-        });
+        res.json({ ventaservicios });
     } catch (error) {
         console.log(error);
         res.status(500).json({
@@ -48,21 +48,20 @@ const ventaserviciosPost = async (req, res = response) => {
             });
         }
 
-        const existeCliente = await Cliente.findById(cliente); // Verificar que el cliente exista
+        const existeCliente = await Cliente.findById(cliente);
         if (!existeCliente) {
             return res.status(400).json({
                 msg: 'El cliente especificado no existe en la base de datos.'
             });
         }
 
-        // Crear la venta de servicio sin el campo detalle
+        // Crear la venta de servicio
         const ventaservicio = new Ventaservicio({ 
             cita, 
             cliente, 
             duracion, 
             precioTotal, 
-            estado,
-            servicios
+            estado
         });
 
         await ventaservicio.save();
@@ -85,7 +84,6 @@ const ventaserviciosPut = async (req, res = response) => {
 
     // Validar campos obligatorios
     if (!cita || !cliente || !duracion || !precioTotal || estado === undefined) {
-        console.log('Datos recibidos para actualizar:', req.body);
         return res.status(400).json({
             msg: 'Cita, cliente, duración, precio total y estado son obligatorios.'
         });
@@ -107,7 +105,7 @@ const ventaserviciosPut = async (req, res = response) => {
             });
         }
 
-        const existeCliente = await Cliente.findById(cliente); // Verificar que el cliente exista
+        const existeCliente = await Cliente.findById(cliente);
         if (!existeCliente) {
             return res.status(400).json({
                 msg: 'El cliente especificado no existe en la base de datos.'
@@ -134,6 +132,7 @@ const ventaserviciosPut = async (req, res = response) => {
     }
 };
 
+// Eliminar una venta
 const ventaserviciosDelete = async (req, res = response) => {
     const { id } = req.params;
 
