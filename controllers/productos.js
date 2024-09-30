@@ -5,7 +5,7 @@ const CategoriaProducto = require('../modules/categoriaproducto');
 // Obtener todos los productos
 const productosGet = async (req, res = response) => {
   try {
-    const productos = await Producto.find().populate('categoria', 'nombreCp'); // Poblamos la categoría para obtener más detalles
+    const productos = await Producto.find().populate('categoria', 'nombreCategoria'); // Poblamos la categoría para obtener más detalles
 
     if (productos.length === 0) {
       return res.status(404).json({

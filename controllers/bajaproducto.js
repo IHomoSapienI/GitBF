@@ -4,7 +4,7 @@ const Insumo = require('../modules/insumo');
 // Funciones para manejar las rutas
 const obtenerBajasProductos = async (req, res) => {
     try {
-        const bajas = await BajaProducto.find();
+        const bajas = await BajaProducto.find().populate('productoId'); // Poblamos el ID del producto
         res.json(bajas);
     } catch (error) {
         res.status(500).json({ message: 'Error al obtener las bajas de productos', error });
@@ -21,6 +21,7 @@ const crearBajaProducto = async (req, res) => {
         }
 
         const nuevaBaja = new BajaProducto({
+            productoId, // Guarda el ID del producto
             producto: insumo.nombreInsumo,
             fechaBaja,
             cantidad,
@@ -36,14 +37,14 @@ const crearBajaProducto = async (req, res) => {
 
 const actualizarBajaProducto = async (req, res) => {
     const { id } = req.params;
-    const { producto, fechaBaja, cantidad, observaciones } = req.body;
+    const { productoId, fechaBaja, cantidad, observaciones } = req.body;
 
     try {
         const bajaActualizada = await BajaProducto.findByIdAndUpdate(
             id,
-            { producto, fechaBaja, cantidad, observaciones },
+            { productoId, fechaBaja, cantidad, observaciones },
             { new: true }
-        );
+        ).populate('productoId'); // Poblamos el ID del producto
 
         if (!bajaActualizada) {
             return res.status(404).json({ message: 'Baja de producto no encontrada' });

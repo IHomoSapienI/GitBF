@@ -1,7 +1,9 @@
-const { Schema, model } = require('mongoose');
-
-// Definición del esquema para la baja de productos
 const BajaProductoSchema = Schema({
+    productoId: {
+        type: Schema.Types.ObjectId,
+        ref: 'Insumo', // Referencia al modelo Insumo
+        required: true
+    },
     producto: {
         type: String,
         required: true
@@ -20,5 +22,3 @@ const BajaProductoSchema = Schema({
         default: ''
     }
 });
-
-module.exports = model('BajaProducto', BajaProductoSchema);
