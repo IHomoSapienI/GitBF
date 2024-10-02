@@ -4,7 +4,7 @@ const Producto = require('../modules/producto');  // Importamos el modelo de Pro
 // Obtener todas las ventas
 const obtenerVentasProductos = async (req, res) => {
     try {
-        const ventas = await VentaProducto.find().populate('nombreProducto', 'nombre precio');  // Relación con Producto
+        const ventas = await VentaProducto.find().populate('nombreProducto', 'precio');  // Relación con Producto
         res.status(200).json({
             ok: true,
             ventaproductos: ventas

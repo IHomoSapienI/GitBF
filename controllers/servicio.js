@@ -5,7 +5,7 @@ const TipoServicio = require('../modules/tiposerv');
 // Obtener todos los servicios
 const serviciosGet = async (req, res = response) => {
   try {
-    const servicios = await Servicio.find().populate('tipoServicio'); // Poblamos el tipoServicio para obtener más detalles
+    const servicios = await Servicio.find().populate('tipoServicio', 'nombreTs'); // Poblamos el tipoServicio para obtener más detalles
 
     if (servicios.length === 0) {
       return res.status(404).json({
