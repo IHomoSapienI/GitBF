@@ -48,7 +48,7 @@ const obtenerCitas = async (req, res) => {
         const citas = await Cita.find()
             .populate('nombreempleado', 'nombreempleado')
             .populate('nombrecliente', 'nombrecliente')
-            .populate('servicios'); // Asegúrate de hacer populate para los servicios
+            .populate('servicios', 'nombreServicio precio'); // Asegúrate de hacer populate para los servicios
         res.json({ citas });
     } catch (error) {
         res.status(500).json({ message: 'Error al obtener citas', error });
