@@ -1,114 +1,137 @@
 const VentaProducto = require('../modules/ventaproductos');
-const Producto = require('../modules/producto');  // Importamos el modelo de Producto
+
+// Crear una nueva venta
+const crearVenta = async (req, res) => {
+    try {
+        const { nombreProducto, nombreCliente, descripcion, precio, cantidad } = req.body;
+
+        // Verificar que el producto y el cliente existan
+        const producto = await Producto.findById(nombreProducto);
+        const cliente = await Cliente.findById(nombreCliente);
+
+        if (!producto) {
+            return res.status(400).json({ msg: 'Producto no encontrado' });
+        }
+
+        if (!cliente) {
+            return res.status(400).json({ msg: 'Cliente no encontrado' });
+        }
+
+        const venta = new VentaProducto({
+            nombreProducto,
+            nombreCliente,
+            descripcion,
+            precio,
+            cantidad,
+            subtotal: cantidad * precio,
+            total: cantidad * precio // Asume que el total es igual al subtotal en esta fase
+        });
+
+        await venta.save();
+        res.status(201).json(venta);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ msg: 'Error al crear la venta' });
+    }
+};
 
 // Obtener todas las ventas
-const obtenerVentasProductos = async (req, res) => {
+const obtenerVentas = async (req, res) => {
     try {
-        const ventas = await VentaProducto.find().populate('nombreProducto', 'precio');  // Relación con Producto
-        res.status(200).json({
-            ok: true,
-            ventaproductos: ventas
-        });
+        const ventas = await VentaProducto.find()
+            .populate('nombreProducto')  // Populate para obtener datos del producto
+            .populate('nombreCliente');  // Populate para obtener datos del cliente
+
+        res.status(200).json(ventas);
     } catch (error) {
         console.error(error);
-        res.status(500).json({
-            ok: false,
-            msg: 'Error al obtener las ventas'
-        });
+        res.status(500).json({ msg: 'Error al obtener las ventas' });
     }
 };
 
-// Crear una nueva venta de producto
-const crearVentaProducto = async (req, res) => {
+// Obtener una venta por ID
+const obtenerVentaPorId = async (req, res) => {
     try {
-        // Obtener el producto para acceder a su precio
-        const producto = await Producto.findById(req.body.nombreProducto);
-        if (!producto) {
-            return res.status(404).json({
-                ok: false,
-                msg: 'Producto no encontrado'
-            });
+        const { id } = req.params;
+        const venta = await VentaProducto.findById(id)
+            .populate('nombreProducto')
+            .populate('nombreCliente');
+
+        if (!venta) {
+            return res.status(404).json({ msg: 'Venta no encontrada' });
         }
 
-        // Crear una nueva venta con el precio del producto
-        const nuevaVenta = new VentaProducto({
-            ...req.body,
-            precio: producto.precio,  // Asignar el precio del producto
-            subtotal: req.body.cantidad * producto.precio,  // Calcular subtotal
-            total: req.body.cantidad * producto.precio  // Puedes agregar otros valores para calcular el total
-        });
-
-        await nuevaVenta.save();
-        res.status(201).json({
-            ok: true,
-            msg: 'Venta de producto creada con éxito',
-            venta: nuevaVenta
-        });
+        res.status(200).json(venta);
     } catch (error) {
         console.error(error);
-        res.status(500).json({
-            ok: false,
-            msg: 'Error al crear la venta de producto'
-        });
+        res.status(500).json({ msg: 'Error al obtener la venta' });
     }
 };
 
-// Actualizar una venta de producto
-const actualizarVentaProducto = async (req, res) => {
-    const { id } = req.params;
+// Actualizar una venta
+const actualizarVenta = async (req, res) => {
     try {
-        // Obtener el producto para acceder a su precio
-        const producto = await Producto.findById(req.body.nombreProducto);
-        if (!producto) {
-            return res.status(404).json({
-                ok: false,
-                msg: 'Producto no encontrado'
-            });
+        const { id } = req.params;
+        const { nombreProducto, nombreCliente, descripcion, precio, cantidad } = req.body;
+
+        let venta = await VentaProducto.findById(id);
+
+        if (!venta) {
+            return res.status(404).json({ msg: 'Venta no encontrada' });
         }
 
-        // Actualizar la venta con el precio y recalcular subtotal y total
-        const ventaActualizada = await VentaProducto.findByIdAndUpdate(id, {
-            ...req.body,
-            precio: producto.precio,  // Asignar el precio actualizado del producto
-            subtotal: req.body.cantidad * producto.precio,  // Recalcular subtotal
-            total: req.body.cantidad * producto.precio  // Recalcular total
-        }, { new: true });
+        // Verificar que el producto y el cliente existan
+        const producto = await Producto.findById(nombreProducto);
+        const cliente = await Cliente.findById(nombreCliente);
 
-        res.status(200).json({
-            ok: true,
-            msg: 'Venta actualizada con éxito',
-            venta: ventaActualizada
-        });
+        if (!producto) {
+            return res.status(400).json({ msg: 'Producto no encontrado' });
+        }
+
+        if (!cliente) {
+            return res.status(400).json({ msg: 'Cliente no encontrado' });
+        }
+
+        venta.nombreProducto = nombreProducto || venta.nombreProducto;
+        venta.nombreCliente = nombreCliente || venta.nombreCliente;
+        venta.descripcion = descripcion || venta.descripcion;
+        venta.precio = precio || venta.precio;
+        venta.cantidad = cantidad || venta.cantidad;
+
+        venta.subtotal = venta.cantidad * venta.precio;
+        venta.total = venta.subtotal; // Actualiza el total también
+
+        await venta.save();
+        res.status(200).json(venta);
     } catch (error) {
         console.error(error);
-        res.status(500).json({
-            ok: false,
-            msg: 'Error al actualizar la venta de producto'
-        });
+        res.status(500).json({ msg: 'Error al actualizar la venta' });
     }
 };
 
-// Eliminar una venta de producto
-const eliminarVentaProducto = async (req, res) => {
-    const { id } = req.params;
+// Eliminar una venta
+const eliminarVenta = async (req, res) => {
     try {
-        await VentaProducto.findByIdAndDelete(id);
-        res.status(200).json({
-            ok: true,
-            msg: 'Venta eliminada con éxito'
-        });
+        const { id } = req.params;
+
+        const venta = await VentaProducto.findById(id);
+
+        if (!venta) {
+            return res.status(404).json({ msg: 'Venta no encontrada' });
+        }
+
+        await venta.remove();
+        res.status(200).json({ msg: 'Venta eliminada exitosamente' });
     } catch (error) {
         console.error(error);
-        res.status(500).json({
-            ok: false,
-            msg: 'Error al eliminar la venta de producto'
-        });
+        res.status(500).json({ msg: 'Error al eliminar la venta' });
     }
 };
 
 module.exports = {
-    obtenerVentasProductos,
-    crearVentaProducto,
-    actualizarVentaProducto,
-    eliminarVentaProducto
+    crearVenta,
+    obtenerVentas,
+    obtenerVentaPorId,
+    actualizarVenta,
+    eliminarVenta
 };

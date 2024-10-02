@@ -3,7 +3,8 @@ const { Schema, model } = require('mongoose');
 // Definición del esquema para compras
 const CompraSchema = Schema({
     proveedor: {
-        type: String,
+        type: Schema.Types.ObjectId, // Referencia a proveedores
+        ref: 'Proveedor', // El nombre del modelo de proveedores (asegúrate que sea correcto)
         required: true
     },
     recibo: {

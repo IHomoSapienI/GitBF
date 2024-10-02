@@ -1,5 +1,6 @@
 const { Schema, model } = require('mongoose');
 
+// Definir el esquema de venta de productos
 const VentaProductoSchema = Schema({
     nombreProducto: {
         type: Schema.Types.ObjectId,
@@ -7,7 +8,8 @@ const VentaProductoSchema = Schema({
         required: true
     },
     nombreCliente: {
-        type: String,
+        type: Schema.Types.ObjectId,
+        ref: 'Cliente',  // Relación con el modelo de Cliente
         required: true
     },
     descripcion: {

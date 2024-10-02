@@ -1,20 +1,12 @@
 const express = require('express');
 const router = express.Router();
-const { obtenerCompras, crearCompra, actualizarCompra, eliminarCompra, cambiarEstadoCompra } = require('../controllers/compra');
+const comprasController = require('../controllers/compra');
 
-// Obtener todas las compras
-router.get('/', obtenerCompras);
-
-// Crear una nueva compra
-router.post('/', crearCompra);
-
-// Actualizar una compra por ID
-router.put('/:id', actualizarCompra);
-
-// Eliminar una compra por ID
-router.delete('/:id', eliminarCompra);
-
-// Cambiar el estado de una compra por ID
-router.patch('/:id/estado', cambiarEstadoCompra);
+// Rutas de compras
+router.post('/compras', comprasController.crearCompra);       // Crear compra
+router.get('/compras', comprasController.obtenerCompras);    // Obtener todas las compras
+router.get('/compras/:id', comprasController.obtenerCompraPorId); // Obtener una compra por ID
+router.put('/compras/:id', comprasController.actualizarCompra);   // Actualizar una compra por ID
+router.delete('/compras/:id', comprasController.eliminarCompra);  // Eliminar una compra por ID
 
 module.exports = router;
