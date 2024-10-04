@@ -6,7 +6,7 @@ const Servicio = require('../modules/servicio'); // Importar el modelo de servic
 // Crear una nueva cita
 const crearCita = async (req, res) => {
     try {
-        const { nombreempleado, nombrecliente, fechacita, montototal, estadocita, servicios } = req.body; // Asegúrate de que servicios esté incluido
+        const { nombreempleado, nombrecliente, fechacita, montototal, estadocita, servicios } = req.body;
 
         // Verificar que el empleado y cliente existen
         const empleado = await Empleado.findById(nombreempleado);
@@ -16,7 +16,7 @@ const crearCita = async (req, res) => {
             return res.status(400).json({ message: 'Empleado o cliente no encontrados' });
         }
 
-        // Verificar que los servicios existen (opcional, pero recomendado)
+        // Verificar que los servicios existen y son válidos
         if (servicios && servicios.length > 0) {
             const serviciosValidos = await Servicio.find({ '_id': { $in: servicios } });
             if (serviciosValidos.length !== servicios.length) {
@@ -46,9 +46,9 @@ const crearCita = async (req, res) => {
 const obtenerCitas = async (req, res) => {
     try {
         const citas = await Cita.find()
-            .populate('nombreempleado', 'nombreempleado')
-            .populate('nombrecliente', 'nombrecliente')
-            .populate('servicios', 'nombreServicio precio'); // Asegúrate de hacer populate para los servicios
+            .populate('nombreempleado', 'nombreempleado') // Puedes incluir más campos si es necesario
+            .populate('nombrecliente', 'nombrecliente') // Idem
+            .populate('servicios', 'nombreServicio precio'); // Asegúrate de que los campos existan en el modelo Servicio
         res.json({ citas });
     } catch (error) {
         res.status(500).json({ message: 'Error al obtener citas', error });
@@ -62,7 +62,7 @@ const obtenerCitaPorId = async (req, res) => {
         const cita = await Cita.findById(id)
             .populate('nombreempleado', 'nombreempleado')
             .populate('nombrecliente', 'nombrecliente')
-            .populate('servicios'); // Asegúrate de hacer populate para los servicios
+            .populate('servicios', 'nombreServicio precio'); // Asegúrate de hacer populate para los servicios
         if (!cita) {
             return res.status(404).json({ message: 'Cita no encontrada' });
         }
@@ -88,7 +88,7 @@ const actualizarCita = async (req, res) => {
         }, { new: true })
         .populate('nombreempleado', 'nombreempleado')
         .populate('nombrecliente', 'nombrecliente')
-        .populate('servicios'); // Asegúrate de hacer populate para los servicios
+        .populate('servicios', 'nombreServicio precio'); // Asegúrate de hacer populate para los servicios
 
         if (!cita) {
             return res.status(404).json({ message: 'Cita no encontrada' });

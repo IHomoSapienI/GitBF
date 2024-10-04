@@ -1,8 +1,8 @@
-const { Router } = require('express')
-const router = Router() //Obtener la función Router
+const { Router } = require('express');
+const { login, register } = require('../controllers/authController'); // Asegúrate de importar el controlador de registro también
+const router = Router();
 
-const { login } = require('../controllers/auth')
-
-router.post('/login', login)
+router.post('/login', login); // Ruta para login
+router.post('/register', register); // Ruta para registro
 
 module.exports = router;
