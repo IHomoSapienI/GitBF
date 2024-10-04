@@ -22,7 +22,7 @@ class Server {
         this.categoriaproductosPath = '/api/categoriaproductos';
         this.productosPath = '/api/productos';
         this.proveedoresPath = '/api/proveedores';
-        this.ventasproductosPath = '/api/ventasproductos'; 
+        this.ventaproductosPath = '/api/ventaproductos'; 
         this.comprasPath = '/api/compras';
         this.authPath = '/api/auth';
         this.middlewares();
@@ -65,7 +65,7 @@ class Server {
         this.app.use(this.proveedoresPath, require('../routes/proveedor'));
         this.app.use(this.categoriaproductosPath, require('../routes/categoriaProductos'));
         this.app.use(this.productosPath, require('../routes/productos'));
-        this.app.use(this.ventasproductosPath, require('../routes/ventaProducto'));
+        this.app.use(this.ventaproductosPath, require('../routes/ventaProductos'));
         this.app.use(this.comprasPath, require('../routes/compra'));
         this.app.use(this.authPath, require('../routes/auth'));
     }
