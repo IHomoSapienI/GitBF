@@ -74,7 +74,7 @@ const usuariosPost = async (req, res = response) => {
             }
         } else {
             // Asignar un rol por defecto si no se especifica
-            const rolPredeterminado = await Rol.findOne({ nombreRol: 'Cliente' }); // Cambia 'Cliente' al nombre que desees
+            const rolPredeterminado = await Rol.findOne({ nombreRol: 'Admin' }); // Cambia 'Cliente' al nombre que desees
             if (!rolPredeterminado) {
                 return res.status(400).json({ msg: 'El rol predeterminado no existe.' });
             }
