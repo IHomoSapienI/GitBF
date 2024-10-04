@@ -1,26 +1,26 @@
 const express = require('express');
 const router = express.Router();
 const {
-    crearVenta,
-    obtenerVentas,
-    obtenerVentaPorId,
-    actualizarVenta,
-    eliminarVenta
+    crearVentaProducto,
+    obtenerVentasProductos,
+    obtenerVentaProductoPorId,
+    actualizarVentaProducto,
+    eliminarVentaProducto
 } = require('../controllers/ventaProducto');
 
-// Ruta para crear una nueva venta
-router.post('/venta', crearVenta);
+// Ruta para crear una nueva venta de producto
+router.post('/', crearVentaProducto); // Cambiado a '/' para que sea relativo a '/api/ventaproductos'
 
-// Ruta para obtener todas las ventas
-router.get('/ventas', obtenerVentas);
+// Ruta para obtener todas las ventas de productos
+router.get('/', obtenerVentasProductos); // Cambiado a '/' para que sea relativo a '/api/ventaproductos'
 
-// Ruta para obtener una venta específica por ID
-router.get('/venta/:id', obtenerVentaPorId);
+// Ruta para obtener una venta de producto específica por ID
+router.get('/:id', obtenerVentaProductoPorId); // Cambiado a '/:id' para que sea relativo a '/api/ventaproductos'
 
-// Ruta para actualizar una venta por ID
-router.put('/venta/:id', actualizarVenta);
+// Ruta para actualizar una venta de producto por ID
+router.put('/:id', actualizarVentaProducto); // Cambiado a '/:id' para que sea relativo a '/api/ventaproductos'
 
-// Ruta para eliminar una venta por ID
-router.delete('/venta/:id', eliminarVenta);
+// Ruta para eliminar una venta de producto por ID
+router.delete('/:id', eliminarVentaProducto); // Cambiado a '/:id' para que sea relativo a '/api/ventaproductos'
 
 module.exports = router;
