@@ -23,7 +23,7 @@ const UsuarioSchema = Schema({
 
     rol: {
         type: Schema.Types.ObjectId,
-        ref: 'rol',
+        ref: 'Rol',
     },
 
     estado: {
@@ -33,23 +33,5 @@ const UsuarioSchema = Schema({
     },
 });
 
-// Middleware para encriptar la contraseña antes de guardar el usuario
-UsuarioSchema.pre('save', async function (next) {
-    if (!this.isModified('password')) {
-        return next();
-    }
-    try {
-        const salt = await bcrypt.genSalt(10);
-        this.password = await bcrypt.hash(this.password, salt); // Encriptar la contraseña
-        next();
-    } catch (err) {
-        next(err);
-    }
-});
-
-// Método para comparar contraseñas
-UsuarioSchema.methods.comparePassword = async function (candidatePassword) {
-    return await bcrypt.compare(candidatePassword, this.password);
-};
 
 module.exports = model('Usuario', UsuarioSchema);

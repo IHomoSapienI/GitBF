@@ -1,84 +1,98 @@
-const {response} = require('express')
-const bcrypt = require('bcryptjs')
-const Rol = require('../modules/rol');
-//Importar modelos
-const Usuario = require('../modules/usuario')
-
+const { response } = require('express');
+const Rol = require('../modules/rol'); // Asegúrate de tener el modelo de Rol
+const Usuario = require('../modules/usuario'); // Asegúrate de tener el modelo de Usuario
+const { createUser } = require('../controllers/userHelper');
+ 
 const usuariosGet = async (req, res = response) => {
-    const body = req.query
+    try {
+        // Consultar todos los documentos de la colección, omitiendo las contraseñas
+        const usuarios = await Usuario.find().select('-password'); // Eliminar el campo `password` de la respuesta
 
-    const {q, nombre, page= 1, limit} = req.query;
-
-    const usuarios = await Usuario.find(); //Consultar todos los documentos de una colección
-
-    res.json({
-        usuarios
-    });
-}
+        res.json({
+            usuarios
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({
+            msg: 'Error al obtener usuarios',
+            error
+        });
+    }
+};
 
 const PromGet = async (req, res = response) => {
-    const body = req.query;
+    const { q, nombre, page = 1, limit } = req.query;
 
-    const {q, nombre, page= 1, limit} = req.query;
-
-    const usuarios = await Usuario.find(); //Consultar todos los documentos de una colección
-
-    usuarios.forEach(numero => console.log(numero));
-
-    res.json({
-        msg: 'Prom API controlador',
-        q,
-        nombre,
-        page,
-        limit,
-        usuarios
-    })
-}
-
-const usuariosPost = async(req, res = response) => {
-    const body = req.body;
-
-    //console.log(body)
-    let msg = ''
-
-    const usuario = new Usuario(body)
-
-    const {nombre, email, password, rol, estado} = req.body;
-    
     try {
+        const usuarios = await Usuario.find(); // Consultar todos los documentos de una colección
+
+        // Log para verificar los usuarios
+        usuarios.forEach(usuario => console.log(usuario));
+
+        res.json({
+            msg: 'Prom API controlador',
+            q,
+            nombre,
+            page,
+            limit,
+            usuarios
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({
+            msg: 'Error al obtener usuarios',
+            error
+        });
+    }
+};
+
+const usuariosPost = async (req, res = response) => {
+    const { nombre, email, password, rol, estado, confirmPassword } = req.body;
+
+    try {
+        // Validar campos obligatorios
+        if (!nombre || !email || !password || !confirmPassword || !rol) {
+            return res.status(400).json({
+                msg: 'Faltan campos obligatorios (nombre, email, password, confirmPassword o rol)'
+            });
+        }
+
+        // Verificar que la contraseña y la confirmación coincidan
+        if (password !== confirmPassword) {
+            return res.status(400).json({
+                msg: 'Las contraseñas no coinciden'
+            });
+        }
+
+        // Verificar si el rol existe
         const existeRol = await Rol.findById(rol);
         if (!existeRol) {
             return res.status(400).json({
                 msg: 'El rol especificado no es válido'
             });
         }
-        //Encriptar la contraseña
-        const salt = bcrypt.genSaltSync(10); //vueltas a encriptar
-        usuario.password = bcrypt.hashSync( password, salt );
-        
-        await usuario.save()
-        msg = 'Usuario Registrado'
+
+        // Llamar a la función createUser para crear y guardar el usuario
+        const usuario = await createUser({ nombre, email, password, rol, estado });
+
+        // Eliminar el campo de la contraseña de la respuesta
+        const { password: _, ...usuarioResponse } = usuario.toObject(); // Excluye 'password'
+
+        res.status(201).json({
+            msg: 'Usuario registrado',
+            usuario: usuarioResponse // Retorna el usuario sin la contraseña
+        });
     } catch (error) {
-        console.log(error)
-        //msg += error.errors.password.message
-        //msg = error
-        if (error) {
-            if (error.name === 'ValidationError') {
-                console.error(Object.values(error.errors).map(val => val.message))
-                msg = Object.values(error.errors).map(val => val.message);
-            }
+        console.error(error);
+        let msg = 'Error al registrar usuario';
+        if (error.name === 'ValidationError') {
+            msg = Object.values(error.errors).map(val => val.message);
         }
-        
+        res.status(500).json({
+            msg
+        });
     }
-   
-    console.log(msg);
-    res.json({
-        msg: msg
-    });
-
-    
-}
-
+};
 // Actualizar un usuario existente
 const usuariosPut = async (req, res = response) => {
     const { id } = req.params;
@@ -93,11 +107,11 @@ const usuariosPut = async (req, res = response) => {
             });
         }
 
-        // Actualizar el usuario por su email
-        const usuario = await Usuario.findByIdAndUpdate(id, { nombre, rol }, { new: true });
+        // Actualizar el usuario
+        const usuario = await Usuario.findByIdAndUpdate(id, { nombre, rol }, { new: true }).select('-password');
 
         res.json({
-            msg: 'Usuario Modificado correctamente',
+            msg: 'Usuario modificado correctamente',
             usuario
         });
     } catch (error) {
@@ -128,7 +142,7 @@ const usuariosDelete = async (req, res = response) => {
         }
 
         res.json({
-            msg: 'Usuario Eliminado',
+            msg: 'Usuario eliminado',
             usuario
         });
     } catch (error) {
@@ -140,13 +154,10 @@ const usuariosDelete = async (req, res = response) => {
     }
 };
 
-
-
-
-module.exports ={
+module.exports = {
     usuariosGet,
     usuariosPost,
     usuariosPut,
     usuariosDelete,
     PromGet
-}
+};

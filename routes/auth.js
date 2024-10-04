@@ -1,4 +1,5 @@
 const { Router } = require('express');
+
 const { login, register } = require('../controllers/authController'); // Asegúrate de importar el controlador de registro también
 const router = Router();
 

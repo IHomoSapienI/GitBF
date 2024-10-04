@@ -1,18 +1,24 @@
-const { Router} = require('express')
+const express = require('express');
+const { validarJWT } = require('../middlewares/verificartoken'); // Importar el middleware
+const {
+    usuariosGet,
+    usuariosPost,
+    usuariosPut,
+    usuariosDelete
+} = require('../controllers/usuario');
 
-const router = Router()
+const router = express.Router();
 
+// Ruta pública para registrar un usuario
+router.post('/', usuariosPost);
 
-const {usuariosGet, usuariosPost, usuariosPut, usuariosDelete, PromGet} = require('../controllers/usuario');
+// Ruta privada para obtener usuarios (requiere autenticación)
+router.get('/', validarJWT, usuariosGet); 
 
-router.get('/', usuariosGet)
+// Ruta privada para actualizar un usuario (requiere autenticación)
+router.put('/:id', validarJWT, usuariosPut); 
 
-router.get('/promedio', PromGet)
+// Ruta privada para eliminar un usuario (requiere autenticación)
+router.delete('/:id', validarJWT, usuariosDelete);
 
-router.post('/', usuariosPost)
-
-router.put('/:id', usuariosPut)
-
-router.delete('/:id', usuariosDelete)
-
-module.exports = router
+module.exports = router;
