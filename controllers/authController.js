@@ -94,11 +94,7 @@ const register = async (req, res) => {
             rolId = rol;
         } else {
             // Asignar rol por defecto (ejemplo: 'Cliente')
-            const rolPredeterminado = await Rol.findOne({ nombreRol: 'Admin' });
-            if (!rolPredeterminado) {
-                return res.status(400).json({ msg: 'El rol predeterminado no existe.' });
-            }
-            rolId = rolPredeterminado._id; // Asigna el ID del rol por defecto
+            const rolAsignado = rol || (await Rol.findOne({ nombreRol: "Admin" }))._id; 
         }
 
         // Llamar a la función createUser para crear y guardar el usuario
