@@ -4,7 +4,8 @@ const { Schema, model } = require('mongoose');
 const PermisoSchema = Schema({
     nombrePermiso: {
         type: String,
-        required: [true, 'El nombre es obligatorio']
+        required: [true, 'El nombre es obligatorio'],
+        unique: true
     },
 
     descripcion: {

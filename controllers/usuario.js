@@ -51,9 +51,9 @@ const usuariosPost = async (req, res = response) => {
 
     try {
         // Validar campos obligatorios
-        if (!nombre || !email || !password || !confirmPassword || !rol) {
+        if (!nombre || !email || !password || !confirmPassword) {
             return res.status(400).json({
-                msg: 'Faltan campos obligatorios (nombre, email, password, confirmPassword o rol)'
+                msg: 'Faltan campos obligatorios (nombre, email, password, confirmPassword)'
             });
         }
 
@@ -65,11 +65,20 @@ const usuariosPost = async (req, res = response) => {
         }
 
         // Verificar si el rol existe
-        const existeRol = await Rol.findById(rol);
-        if (!existeRol) {
-            return res.status(400).json({
-                msg: 'El rol especificado no es válido'
-            });
+        if (rol) {
+            const existeRol = await Rol.findById(rol);
+            if (!existeRol) {
+                return res.status(400).json({
+                    msg: 'El rol especificado no es válido'
+                });
+            }
+        } else {
+            // Asignar un rol por defecto si no se especifica
+            const rolPredeterminado = await Rol.findOne({ nombreRol: 'Cliente' }); // Cambia 'Cliente' al nombre que desees
+            if (!rolPredeterminado) {
+                return res.status(400).json({ msg: 'El rol predeterminado no existe.' });
+            }
+            rol = rolPredeterminado._id; // Asigna el ID del rol por defecto
         }
 
         // Llamar a la función createUser para crear y guardar el usuario

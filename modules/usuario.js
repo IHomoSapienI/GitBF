@@ -24,6 +24,7 @@ const UsuarioSchema = Schema({
     rol: {
         type: Schema.Types.ObjectId,
         ref: 'Rol',
+        default: 'defaultRoleId', 
     },
 
     estado: {

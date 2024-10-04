@@ -59,10 +59,10 @@ const register = async (req, res) => {
 
     try {
         // Validar campos obligatorios
-        if (!nombre || !email || !password || !confirmPassword || !rol) {
+        if (!nombre || !email || !password || !confirmPassword) {
             console.log('Faltan campos obligatorios');
             return res.status(400).json({
-                msg: 'Faltan campos obligatorios (nombre, email, password, confirmPassword o rol)',
+                msg: 'Faltan campos obligatorios (nombre, email, password, confirmPassword)',
             });
         }
 
@@ -81,24 +81,28 @@ const register = async (req, res) => {
             return res.status(400).json({ message: 'El usuario ya existe' });
         }
 
-        console.log('El usuario no existe, procediendo a verificar el rol...');
-
-        // Verificar si el rol existe
-        const existeRol = await Rol.findById(rol);
-        if (!existeRol) {
-            console.log('El rol especificado no es válido:', rol);
-            return res.status(400).json({
-                msg: 'El rol especificado no es válido',
-            });
-        }
-        console.log('Contraseña recibida para el registro:', password); 
-        const existingUser = await User.findOne({ email });
-        if (existingUser) {
-            return res.status(400).json({ message: 'El usuario ya existe' });
+        // Verificar si el rol existe o asignar rol por defecto
+        let rolId;
+        if (rol) {
+            const existeRol = await Rol.findById(rol);
+            if (!existeRol) {
+                console.log('El rol especificado no es válido:', rol);
+                return res.status(400).json({
+                    msg: 'El rol especificado no es válido',
+                });
+            }
+            rolId = rol;
+        } else {
+            // Asignar rol por defecto (ejemplo: 'Cliente')
+            const rolPredeterminado = await Rol.findOne({ nombreRol: 'Cliente' });
+            if (!rolPredeterminado) {
+                return res.status(400).json({ msg: 'El rol predeterminado no existe.' });
+            }
+            rolId = rolPredeterminado._id; // Asigna el ID del rol por defecto
         }
 
         // Llamar a la función createUser para crear y guardar el usuario
-        const newUser = await createUser({ nombre, email, password, rol, estado });
+        const newUser = await createUser({ nombre, email, password, rol: rolId, estado });
         console.log('Usuario guardado en la base de datos:', JSON.stringify(newUser, null, 2));
 
         // Generar un token
@@ -111,6 +115,7 @@ const register = async (req, res) => {
         res.status(500).json({ message: 'Error en el servidor' });
     }
 };
+
 
 
 module.exports = {
