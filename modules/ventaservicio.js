@@ -1,15 +1,42 @@
 const { Schema, model } = require('mongoose');
 
-// Definición del esquema para ventas de servicios
 const VentaServicioSchema = Schema({
-    cliente: { type: Schema.Types.ObjectId, ref: 'Cliente' },
-    cita: { type: Schema.Types.ObjectId, ref: 'Cita' },
+    cliente: { 
+        type: Schema.Types.ObjectId, 
+        ref: 'Cliente',
+        required: [true, 'El cliente es obligatorio']
+    },
+    cita: { 
+        type: Schema.Types.ObjectId, 
+        ref: 'Cita',
+        required: [true, 'La cita es obligatoria']
+    },
     servicios: [{
-        servicio: { type: Schema.Types.ObjectId, ref: 'Servicio' },
-        nombreServicio: { type: String, required: true },
-        precio: { type: Number, required: true },
-        subtotal: { type: Number, required: true },
-        tiempo: { type: Number, required: true } 
+        servicio: { 
+            type: Schema.Types.ObjectId, 
+            ref: 'Servicio',
+            required: true
+        },
+        nombreServicio: { 
+            type: String, 
+            required: true,
+            trim: true
+        },
+        precio: { 
+            type: Number, 
+            required: true,
+            min: 0
+        },
+        subtotal: { 
+            type: Number, 
+            required: true,
+            min: 0
+        },
+        tiempo: { 
+            type: Number, 
+            required: true,
+            min: 0
+        } 
     }],
     precioTotal: {
         type: Number,
@@ -20,10 +47,22 @@ const VentaServicioSchema = Schema({
         type: Boolean,
         default: true
     },
-    fecha: { // Nuevo campo para la fecha
+    fecha: {
         type: Date,
-        default: Date.now // Establece la fecha actual por defecto
+        default: Date.now
     }
+}, {
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true }
+});
+
+// Virtuals
+VentaServicioSchema.virtual('clienteNombre').get(function() {
+    return this.cliente ? this.cliente.nombrecliente : 'Cliente no especificado';
+});
+
+VentaServicioSchema.virtual('citaFecha').get(function() {
+    return this.cita ? this.cita.fechacita : 'Fecha no especificada';
 });
 
 module.exports = model('VentaServicio', VentaServicioSchema);

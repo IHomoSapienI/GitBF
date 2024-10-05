@@ -1,27 +1,25 @@
 const { response } = require('express');
-const Ventaservicio = require('../modules/ventaservicio'); 
+const Ventaservicio = require('../modules/ventaservicio');
 const Cita = require('../modules/cita');
 const Cliente = require('../modules/cliente');
-const Servicio = require('../modules/servicio'); // Importa el modelo de Servicio
+const Servicio = require('../modules/servicio');
 
 // Obtener todas las ventas de servicios
-const ventaserviciosGet = async (req, res) => {
+const ventaserviciosGet = async (req, res = response) => {
     try {
         const ventaservicios = await Ventaservicio.find()
-            .populate('cliente', 'nombrecliente') // Popula solo el nombre del cliente
+            .populate('cliente', 'nombrecliente')
             .populate({
                 path: 'cita',
-                select: 'fechacita nombreempleado', // Selecciona la fecha de la cita y el empleado
+                select: 'fechacita nombreempleado',
                 populate: {
-                    path: 'nombreempleado', // Referencia correcta al empleado
+                    path: 'nombreempleado',
                     model: 'Empleado',
-                    select: 'nombre' // Cambia 'nombre' por el campo que contenga el nombre del empleado
+                    select: 'nombre'
                 }
             })
-            .populate({
-                path: 'servicios.servicio', // Asegúrate de que 'servicio' es el campo correcto en tu esquema
-                select: 'nombreServicio precio tiempo' // Selecciona los campos que necesitas
-            });
+            .populate('servicios.servicio', 'nombreServicio precio tiempo')
+            .lean();
 
         if (ventaservicios.length === 0) {
             return res.status(404).json({
@@ -29,9 +27,27 @@ const ventaserviciosGet = async (req, res) => {
             });
         }
 
-        res.json({ ventaservicios });
+        // Asegurarse de que todos los campos estén correctamente formateados
+        const ventasFormateadas = ventaservicios.map(venta => ({
+            ...venta,
+            cliente: venta.cliente ? {
+                _id: venta.cliente._id,
+                nombrecliente: venta.cliente.nombrecliente || 'Nombre no disponible'
+            } : null,
+            cita: venta.cita ? {
+                _id: venta.cita._id,
+                fechacita: venta.cita.fechacita,
+                nombreempleado: venta.cita.nombreempleado ? venta.cita.nombreempleado.nombre : 'Empleado no especificado'
+            } : null,
+            servicios: venta.servicios.map(servicio => ({
+                ...servicio,
+                nombreServicio: servicio.nombreServicio || 'Servicio no especificado'
+            }))
+        }));
+
+        res.json({ ventaservicios: ventasFormateadas });
     } catch (error) {
-        console.log(error);
+        console.error('Error al obtener las ventas de los servicios:', error);
         res.status(500).json({
             msg: 'Error al obtener las ventas de los servicios'
         });
@@ -42,7 +58,6 @@ const ventaserviciosGet = async (req, res) => {
 const ventaserviciosPost = async (req, res = response) => {
     const { cita, cliente, servicios, precioTotal, estado } = req.body;
 
-    // Validar campos obligatorios
     if (!cita || !cliente || !servicios || !precioTotal || estado === undefined) {
         return res.status(400).json({
             msg: 'Cita, cliente, servicios, precio total y estado son obligatorios.'
@@ -50,47 +65,42 @@ const ventaserviciosPost = async (req, res = response) => {
     }
 
     try {
-        // Verificar que la cita y el cliente existan
-        const existeCita = await Cita.findById(cita);
-        if (!existeCita) {
+        const [existeCita, existeCliente] = await Promise.all([
+            Cita.findById(cita),
+            Cliente.findById(cliente)
+        ]);
+
+        if (!existeCita || !existeCliente) {
             return res.status(400).json({
-                msg: 'La cita especificada no existe en la base de datos.'
+                msg: 'La cita o el cliente especificado no existe en la base de datos.'
             });
         }
 
-        const existeCliente = await Cliente.findById(cliente);
-        if (!existeCliente) {
-            return res.status(400).json({
-                msg: 'El cliente especificado no existe en la base de datos.'
-            });
-        }
+        const serviciosIds = servicios.map(servicio => servicio.servicio);
+        const serviciosValidos = await Servicio.find({ _id: { $in: serviciosIds } });
 
-        // Verificar que los servicios existan y calcular la duración total
-        const serviciosValidos = await Servicio.find({ _id: { $in: servicios } });
         if (serviciosValidos.length !== servicios.length) {
             return res.status(400).json({
                 msg: 'Uno o más servicios no existen en la base de datos.'
             });
         }
 
-        // Crear la venta de servicio
         const serviciosConTiempo = serviciosValidos.map(servicio => ({
             servicio: servicio._id,
             nombreServicio: servicio.nombreServicio,
             precio: servicio.precio,
-            subtotal: servicio.precio, // Asumiendo que el subtotal es igual al precio aquí, ajusta si es necesario
-            tiempo: servicio.tiempo // Incluir el tiempo del servicio
+            subtotal: servicio.precio,
+            tiempo: servicio.tiempo
         }));
 
         const ventaservicio = new Ventaservicio({ 
             cita, 
             cliente, 
-            servicios: serviciosConTiempo, // Usar los servicios con el tiempo incluido
+            servicios: serviciosConTiempo,
             precioTotal, 
             estado
         });
 
-        // Guardar la venta en la base de datos
         await ventaservicio.save();
 
         res.status(201).json({
@@ -98,7 +108,7 @@ const ventaserviciosPost = async (req, res = response) => {
             ventaservicio
         });
     } catch (error) {
-        console.log(error);
+        console.error('Error al crear la venta de servicio:', error);
         res.status(500).json({
             msg: 'Error al crear la venta de servicio'
         });
@@ -110,7 +120,6 @@ const ventaserviciosPut = async (req, res = response) => {
     const { id } = req.params;
     const { cita, cliente, servicios, precioTotal, estado } = req.body;
 
-    // Validar campos obligatorios
     if (!cita || !cliente || !servicios || !precioTotal || estado === undefined) {
         return res.status(400).json({
             msg: 'Cita, cliente, servicios, precio total y estado son obligatorios.'
@@ -118,7 +127,6 @@ const ventaserviciosPut = async (req, res = response) => {
     }
 
     try {
-        // Verificar que la venta de servicio existe
         const venta = await Ventaservicio.findById(id);
         if (!venta) {
             return res.status(404).json({
@@ -126,46 +134,40 @@ const ventaserviciosPut = async (req, res = response) => {
             });
         }
 
-        // Verificar que la cita y el cliente existan
-        const existeCita = await Cita.findById(cita);
-        if (!existeCita) {
+        const [existeCita, existeCliente] = await Promise.all([
+            Cita.findById(cita),
+            Cliente.findById(cliente)
+        ]);
+
+        if (!existeCita || !existeCliente) {
             return res.status(400).json({
-                msg: 'La cita especificada no existe en la base de datos.'
+                msg: 'La cita o el cliente especificado no existe en la base de datos.'
             });
         }
 
-        const existeCliente = await Cliente.findById(cliente);
-        if (!existeCliente) {
-            return res.status(400).json({
-                msg: 'El cliente especificado no existe en la base de datos.'
-            });
-        }
+        const serviciosIds = servicios.map(servicio => servicio.servicio);
+        const serviciosValidos = await Servicio.find({ _id: { $in: serviciosIds } });
 
-        // Verificar que los servicios existan y calcular la duración total
-        const serviciosValidos = await Servicio.find({ _id: { $in: servicios } });
         if (serviciosValidos.length !== servicios.length) {
             return res.status(400).json({
                 msg: 'Uno o más servicios no existen en la base de datos.'
             });
         }
 
-        // Crear el nuevo array de servicios con tiempo
         const serviciosConTiempo = serviciosValidos.map(servicio => ({
             servicio: servicio._id,
             nombreServicio: servicio.nombreServicio,
             precio: servicio.precio,
-            subtotal: servicio.precio, // Ajusta si es necesario
-            tiempo: servicio.tiempo // Incluir el tiempo del servicio
+            subtotal: servicio.precio,
+            tiempo: servicio.tiempo
         }));
 
-        // Actualizar los campos de la venta
         venta.cita = cita;
         venta.cliente = cliente;
-        venta.servicios = serviciosConTiempo; // Actualizar los servicios seleccionados
+        venta.servicios = serviciosConTiempo;
         venta.precioTotal = precioTotal;
         venta.estado = estado;
 
-        // Guardar los cambios
         await venta.save();
 
         res.json({
