@@ -7,11 +7,12 @@ const Servicio = require('../modules/servicio');
 // Obtener todas las ventas de servicios
 const ventaserviciosGet = async (req, res = response) => {
     try {
+        // Obtención de ventas de servicios con población de datos
         const ventaservicios = await Ventaservicio.find()
             .populate('cliente', 'nombrecliente')
             .populate({
                 path: 'cita',
-                select: 'fechacita nombreempleado',
+                select: 'fechacita',
                 populate: {
                     path: 'nombreempleado',
                     model: 'Empleado',
@@ -21,30 +22,41 @@ const ventaserviciosGet = async (req, res = response) => {
             .populate('servicios.servicio', 'nombreServicio precio tiempo')
             .lean();
 
+        // Verificación de si se encontraron ventas
         if (ventaservicios.length === 0) {
             return res.status(404).json({
                 msg: 'No se encontraron ventas de servicios en la base de datos'
             });
         }
 
-        // Asegurarse de que todos los campos estén correctamente formateados
-        const ventasFormateadas = ventaservicios.map(venta => ({
-            ...venta,
-            cliente: venta.cliente ? {
+        // Formateo de las ventas
+        const ventasFormateadas = ventaservicios.map(venta => {
+            const cliente = venta.cliente ? {
                 _id: venta.cliente._id,
                 nombrecliente: venta.cliente.nombrecliente || 'Nombre no disponible'
-            } : null,
-            cita: venta.cita ? {
+            } : null;
+
+            const cita = venta.cita ? {
                 _id: venta.cita._id,
                 fechacita: venta.cita.fechacita,
                 nombreempleado: venta.cita.nombreempleado ? venta.cita.nombreempleado.nombre : 'Empleado no especificado'
-            } : null,
-            servicios: venta.servicios.map(servicio => ({
+            } : null;
+
+            // Verificación para prevenir TypeError
+            const servicios = Array.isArray(venta.servicios) ? venta.servicios.map(servicio => ({
                 ...servicio,
                 nombreServicio: servicio.nombreServicio || 'Servicio no especificado'
-            }))
-        }));
+            })) : []; // Devuelve un arreglo vacío si venta.servicios no es un arreglo
 
+            return {
+                ...venta,
+                cliente,
+                cita,
+                servicios
+            };
+        });
+
+        // Envío de la respuesta
         res.json({ ventaservicios: ventasFormateadas });
     } catch (error) {
         console.error('Error al obtener las ventas de los servicios:', error);
@@ -53,6 +65,7 @@ const ventaserviciosGet = async (req, res = response) => {
         });
     }
 };
+
 
 // Crear una nueva venta de servicio
 const ventaserviciosPost = async (req, res = response) => {
