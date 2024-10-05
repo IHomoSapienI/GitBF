@@ -1,26 +1,19 @@
 const { Schema, model } = require('mongoose');
 
-const VentaservicioSchema = Schema({
-    cita: {
-        type: Schema.Types.ObjectId,
-        ref: 'Cita',
-        required: true
-    },
-    cliente: {
-        type: Schema.Types.ObjectId,
-        ref: 'Cliente',
-        required: true
-    },
-    servicios: [
-        {
-            type: Schema.Types.ObjectId,
-            ref: 'Servicio', // Referencia al modelo 'Servicio'
-            required: true
-        }
-    ],
+// Definición del esquema para ventas de servicios
+const VentaServicioSchema = Schema({
+    cliente: { type: Schema.Types.ObjectId, ref: 'Cliente' },
+    cita: { type: Schema.Types.ObjectId, ref: 'Cita' },
+    servicios: [{
+        servicio: { type: Schema.Types.ObjectId, ref: 'Servicio' },
+        nombreServicio: { type: String, required: true },
+        precio: { type: Number, required: true },
+        subtotal: { type: Number, required: true }
+    }],
     precioTotal: {
         type: Number,
-        required: true
+        required: true,
+        min: 0
     },
     estado: {
         type: Boolean,
@@ -28,4 +21,4 @@ const VentaservicioSchema = Schema({
     }
 });
 
-module.exports = model('Ventaservicio', VentaservicioSchema);
+module.exports = model('VentaServicio', VentaServicioSchema);
