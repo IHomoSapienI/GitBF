@@ -58,6 +58,7 @@ const ventaserviciosGet = async (req, res = response) => {
 const ventaserviciosPost = async (req, res = response) => {
     const { cita, cliente, servicios, precioTotal, estado } = req.body;
 
+    // Verificación de campos obligatorios
     if (!cita || !cliente || !servicios || !precioTotal || estado === undefined) {
         return res.status(400).json({
             msg: 'Cita, cliente, servicios, precio total y estado son obligatorios.'
@@ -76,20 +77,23 @@ const ventaserviciosPost = async (req, res = response) => {
             });
         }
 
+        // Obtiene solo los IDs de los servicios
         const serviciosIds = servicios.map(servicio => servicio.servicio);
         const serviciosValidos = await Servicio.find({ _id: { $in: serviciosIds } });
 
+        // Verificación de existencia de servicios
         if (serviciosValidos.length !== servicios.length) {
             return res.status(400).json({
                 msg: 'Uno o más servicios no existen en la base de datos.'
             });
         }
 
+        // Mapeo de servicios a formato adecuado
         const serviciosConTiempo = serviciosValidos.map(servicio => ({
             servicio: servicio._id,
             nombreServicio: servicio.nombreServicio,
             precio: servicio.precio,
-            subtotal: servicio.precio,
+            subtotal: servicio.precio, // Puedes ajustar el subtotal si es necesario
             tiempo: servicio.tiempo
         }));
 
@@ -120,6 +124,7 @@ const ventaserviciosPut = async (req, res = response) => {
     const { id } = req.params;
     const { cita, cliente, servicios, precioTotal, estado } = req.body;
 
+    // Verificación de campos obligatorios
     if (!cita || !cliente || !servicios || !precioTotal || estado === undefined) {
         return res.status(400).json({
             msg: 'Cita, cliente, servicios, precio total y estado son obligatorios.'
@@ -158,10 +163,11 @@ const ventaserviciosPut = async (req, res = response) => {
             servicio: servicio._id,
             nombreServicio: servicio.nombreServicio,
             precio: servicio.precio,
-            subtotal: servicio.precio,
+            subtotal: servicio.precio, // Puedes ajustar el subtotal si es necesario
             tiempo: servicio.tiempo
         }));
 
+        // Actualiza los campos de la venta
         venta.cita = cita;
         venta.cliente = cliente;
         venta.servicios = serviciosConTiempo;
