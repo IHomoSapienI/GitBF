@@ -56,7 +56,7 @@ const ventaserviciosPost = async (req, res = response) => {
             });
         }
 
-        // Verificar que los servicios existan
+        // Verificar que los servicios existan y calcular la duración total
         const serviciosValidos = await Servicio.find({ _id: { $in: servicios } });
         if (serviciosValidos.length !== servicios.length) {
             return res.status(400).json({
@@ -65,13 +65,20 @@ const ventaserviciosPost = async (req, res = response) => {
         }
 
         // Crear la venta de servicio
+        const serviciosConTiempo = serviciosValidos.map(servicio => ({
+            servicio: servicio._id,
+            nombreServicio: servicio.nombreServicio,
+            precio: servicio.precio,
+            subtotal: servicio.precio, // Asumiendo que el subtotal es igual al precio aquí, ajusta si es necesario
+            tiempo: servicio.tiempo // Incluir el tiempo del servicio
+        }));
+
         const ventaservicio = new Ventaservicio({ 
             cita, 
             cliente, 
-            servicios, 
+            servicios: serviciosConTiempo, // Usar los servicios con el tiempo incluido
             precioTotal, 
             estado
-            // No es necesario especificar la fecha aquí, se usa la fecha por defecto
         });
 
         // Guardar la venta en la base de datos
@@ -89,7 +96,6 @@ const ventaserviciosPost = async (req, res = response) => {
     }
 };
 
-// Actualizar una venta existente
 const ventaserviciosPut = async (req, res = response) => {
     const { id } = req.params;
     const { cita, cliente, servicios, precioTotal, estado } = req.body;
@@ -125,7 +131,7 @@ const ventaserviciosPut = async (req, res = response) => {
             });
         }
 
-        // Verificar que los servicios existan
+        // Verificar que los servicios existan y calcular la duración total
         const serviciosValidos = await Servicio.find({ _id: { $in: servicios } });
         if (serviciosValidos.length !== servicios.length) {
             return res.status(400).json({
@@ -133,10 +139,19 @@ const ventaserviciosPut = async (req, res = response) => {
             });
         }
 
+        // Crear el nuevo array de servicios con tiempo
+        const serviciosConTiempo = serviciosValidos.map(servicio => ({
+            servicio: servicio._id,
+            nombreServicio: servicio.nombreServicio,
+            precio: servicio.precio,
+            subtotal: servicio.precio, // Ajusta si es necesario
+            tiempo: servicio.tiempo // Incluir el tiempo del servicio
+        }));
+
         // Actualizar los campos de la venta
         venta.cita = cita;
         venta.cliente = cliente;
-        venta.servicios = servicios; // Actualizar los servicios seleccionados
+        venta.servicios = serviciosConTiempo; // Actualizar los servicios seleccionados
         venta.precioTotal = precioTotal;
         venta.estado = estado;
 
@@ -154,6 +169,7 @@ const ventaserviciosPut = async (req, res = response) => {
         });
     }
 };
+
 
 
 // Eliminar una venta

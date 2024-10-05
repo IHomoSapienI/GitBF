@@ -8,7 +8,8 @@ const VentaServicioSchema = Schema({
         servicio: { type: Schema.Types.ObjectId, ref: 'Servicio' },
         nombreServicio: { type: String, required: true },
         precio: { type: Number, required: true },
-        subtotal: { type: Number, required: true }
+        subtotal: { type: Number, required: true },
+        tiempo: { type: Number, required: true } 
     }],
     precioTotal: {
         type: Number,
