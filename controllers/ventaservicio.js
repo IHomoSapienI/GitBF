@@ -8,12 +8,20 @@ const Servicio = require('../modules/servicio'); // Importa el modelo de Servici
 const ventaserviciosGet = async (req, res) => {
     try {
         const ventaservicios = await Ventaservicio.find()
+            .populate('cliente', 'nombrecliente') // Popula solo el nombre del cliente
             .populate({
                 path: 'cita',
-                populate: { path: 'servicios' } // Popula los servicios a través de la cita
+                select: 'fechacita nombreempleado', // Selecciona la fecha de la cita y el empleado
+                populate: {
+                    path: 'nombreempleado', // Referencia correcta al empleado
+                    model: 'Empleado',
+                    select: 'nombre' // Cambia 'nombre' por el campo que contenga el nombre del empleado
+                }
             })
-            .populate('cliente')
-            .populate('servicios'); // Popula directamente los servicios en la venta
+            .populate({
+                path: 'servicios.servicio', // Asegúrate de que 'servicio' es el campo correcto en tu esquema
+                select: 'nombreServicio precio tiempo' // Selecciona los campos que necesitas
+            });
 
         if (ventaservicios.length === 0) {
             return res.status(404).json({
@@ -30,6 +38,7 @@ const ventaserviciosGet = async (req, res) => {
     }
 };
 
+// Crear una nueva venta de servicio
 const ventaserviciosPost = async (req, res = response) => {
     const { cita, cliente, servicios, precioTotal, estado } = req.body;
 
@@ -96,6 +105,7 @@ const ventaserviciosPost = async (req, res = response) => {
     }
 };
 
+// Actualizar una venta de servicio
 const ventaserviciosPut = async (req, res = response) => {
     const { id } = req.params;
     const { cita, cliente, servicios, precioTotal, estado } = req.body;
@@ -169,8 +179,6 @@ const ventaserviciosPut = async (req, res = response) => {
         });
     }
 };
-
-
 
 // Eliminar una venta
 const ventaserviciosDelete = async (req, res = response) => {
