@@ -30,14 +30,13 @@ const ventaserviciosGet = async (req, res) => {
     }
 };
 
-// Crear una nueva venta de servicio
 const ventaserviciosPost = async (req, res = response) => {
     const { cita, cliente, servicios, precioTotal, estado } = req.body;
 
     // Validar campos obligatorios
     if (!cita || !cliente || !servicios || !precioTotal || estado === undefined) {
         return res.status(400).json({
-            msg: 'Cita, cliente, servicios, duración, precio total y estado son obligatorios.'
+            msg: 'Cita, cliente, servicios, precio total y estado son obligatorios.'
         });
     }
 
@@ -69,10 +68,10 @@ const ventaserviciosPost = async (req, res = response) => {
         const ventaservicio = new Ventaservicio({ 
             cita, 
             cliente, 
-            servicios, // Asignar los servicios a la venta
-          
+            servicios, 
             precioTotal, 
             estado
+            // No es necesario especificar la fecha aquí, se usa la fecha por defecto
         });
 
         // Guardar la venta en la base de datos
@@ -96,9 +95,9 @@ const ventaserviciosPut = async (req, res = response) => {
     const { cita, cliente, servicios, precioTotal, estado } = req.body;
 
     // Validar campos obligatorios
-    if (!cita || !cliente || !servicios  || !precioTotal || estado === undefined) {
+    if (!cita || !cliente || !servicios || !precioTotal || estado === undefined) {
         return res.status(400).json({
-            msg: 'Cita, cliente, servicios, duración, precio total y estado son obligatorios.'
+            msg: 'Cita, cliente, servicios, precio total y estado son obligatorios.'
         });
     }
 
@@ -138,7 +137,6 @@ const ventaserviciosPut = async (req, res = response) => {
         venta.cita = cita;
         venta.cliente = cliente;
         venta.servicios = servicios; // Actualizar los servicios seleccionados
-        venta.duracion = duracion;
         venta.precioTotal = precioTotal;
         venta.estado = estado;
 
@@ -156,6 +154,7 @@ const ventaserviciosPut = async (req, res = response) => {
         });
     }
 };
+
 
 // Eliminar una venta
 const ventaserviciosDelete = async (req, res = response) => {

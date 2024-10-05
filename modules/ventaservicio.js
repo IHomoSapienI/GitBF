@@ -18,6 +18,10 @@ const VentaServicioSchema = Schema({
     estado: {
         type: Boolean,
         default: true
+    },
+    fecha: { // Nuevo campo para la fecha
+        type: Date,
+        default: Date.now // Establece la fecha actual por defecto
     }
 });
 
