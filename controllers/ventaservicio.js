@@ -1,9 +1,10 @@
 const { response } = require('express');
 const Ventaservicio = require('../modules/ventaservicio'); 
 const Cita = require('../modules/cita');
-const Cliente = require('../modules/cliente'); 
+const Cliente = require('../modules/cliente');
+const Servicio = require('../modules/servicio'); // Importa el modelo de Servicio
 
-// Obtener todos los servicios
+// Obtener todas las ventas de servicios
 const ventaserviciosGet = async (req, res) => {
     try {
         const ventaservicios = await Ventaservicio.find()
@@ -11,7 +12,8 @@ const ventaserviciosGet = async (req, res) => {
                 path: 'cita',
                 populate: { path: 'servicios' } // Popula los servicios a través de la cita
             })
-            .populate('cliente');
+            .populate('cliente')
+            .populate('servicios'); // Popula directamente los servicios en la venta
 
         if (ventaservicios.length === 0) {
             return res.status(404).json({
@@ -30,12 +32,12 @@ const ventaserviciosGet = async (req, res) => {
 
 // Crear una nueva venta de servicio
 const ventaserviciosPost = async (req, res = response) => {
-    const { cita, cliente, duracion, precioTotal, estado } = req.body;
+    const { cita, cliente, servicios, duracion, precioTotal, estado } = req.body;
 
     // Validar campos obligatorios
-    if (!cita || !cliente || !duracion || !precioTotal || estado === undefined) {
+    if (!cita || !cliente || !servicios || !duracion || !precioTotal || estado === undefined) {
         return res.status(400).json({
-            msg: 'Cita, cliente, duración, precio total y estado son obligatorios.'
+            msg: 'Cita, cliente, servicios, duración, precio total y estado son obligatorios.'
         });
     }
 
@@ -55,16 +57,27 @@ const ventaserviciosPost = async (req, res = response) => {
             });
         }
 
+        // Verificar que los servicios existan
+        const serviciosValidos = await Servicio.find({ _id: { $in: servicios } });
+        if (serviciosValidos.length !== servicios.length) {
+            return res.status(400).json({
+                msg: 'Uno o más servicios no existen en la base de datos.'
+            });
+        }
+
         // Crear la venta de servicio
         const ventaservicio = new Ventaservicio({ 
             cita, 
             cliente, 
+            servicios, // Asignar los servicios a la venta
             duracion, 
             precioTotal, 
             estado
         });
 
+        // Guardar la venta en la base de datos
         await ventaservicio.save();
+
         res.status(201).json({
             msg: 'Venta de servicio creada correctamente',
             ventaservicio
@@ -80,16 +93,17 @@ const ventaserviciosPost = async (req, res = response) => {
 // Actualizar una venta existente
 const ventaserviciosPut = async (req, res = response) => {
     const { id } = req.params;
-    const { cita, cliente, duracion, precioTotal, estado } = req.body;
+    const { cita, cliente, servicios, duracion, precioTotal, estado } = req.body;
 
     // Validar campos obligatorios
-    if (!cita || !cliente || !duracion || !precioTotal || estado === undefined) {
+    if (!cita || !cliente || !servicios || !duracion || !precioTotal || estado === undefined) {
         return res.status(400).json({
-            msg: 'Cita, cliente, duración, precio total y estado son obligatorios.'
+            msg: 'Cita, cliente, servicios, duración, precio total y estado son obligatorios.'
         });
     }
 
     try {
+        // Verificar que la venta de servicio existe
         const venta = await Ventaservicio.findById(id);
         if (!venta) {
             return res.status(404).json({
@@ -112,14 +126,25 @@ const ventaserviciosPut = async (req, res = response) => {
             });
         }
 
+        // Verificar que los servicios existan
+        const serviciosValidos = await Servicio.find({ _id: { $in: servicios } });
+        if (serviciosValidos.length !== servicios.length) {
+            return res.status(400).json({
+                msg: 'Uno o más servicios no existen en la base de datos.'
+            });
+        }
+
         // Actualizar los campos de la venta
         venta.cita = cita;
         venta.cliente = cliente;
+        venta.servicios = servicios; // Actualizar los servicios seleccionados
         venta.duracion = duracion;
         venta.precioTotal = precioTotal;
         venta.estado = estado;
 
+        // Guardar los cambios
         await venta.save();
+
         res.json({
             msg: 'Venta de servicio actualizada correctamente',
             venta
@@ -159,5 +184,5 @@ module.exports = {
     ventaserviciosGet,
     ventaserviciosPost,
     ventaserviciosPut, 
-    ventaserviciosDelete 
+    ventaserviciosDelete
 };

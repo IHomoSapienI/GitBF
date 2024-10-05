@@ -11,6 +11,13 @@ const VentaservicioSchema = Schema({
         ref: 'Cliente',
         required: true
     },
+    servicios: [
+        {
+            type: Schema.Types.ObjectId,
+            ref: 'Servicio', // Referencia al modelo 'Servicio'
+            required: true
+        }
+    ],
     duracion: {
         type: Number,
         required: true
