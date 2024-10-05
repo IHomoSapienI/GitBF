@@ -18,10 +18,6 @@ const VentaservicioSchema = Schema({
             required: true
         }
     ],
-    duracion: {
-        type: Number,
-        required: true
-    },
     precioTotal: {
         type: Number,
         required: true

@@ -32,10 +32,10 @@ const ventaserviciosGet = async (req, res) => {
 
 // Crear una nueva venta de servicio
 const ventaserviciosPost = async (req, res = response) => {
-    const { cita, cliente, servicios, duracion, precioTotal, estado } = req.body;
+    const { cita, cliente, servicios, precioTotal, estado } = req.body;
 
     // Validar campos obligatorios
-    if (!cita || !cliente || !servicios || !duracion || !precioTotal || estado === undefined) {
+    if (!cita || !cliente || !servicios || !precioTotal || estado === undefined) {
         return res.status(400).json({
             msg: 'Cita, cliente, servicios, duración, precio total y estado son obligatorios.'
         });
@@ -70,7 +70,7 @@ const ventaserviciosPost = async (req, res = response) => {
             cita, 
             cliente, 
             servicios, // Asignar los servicios a la venta
-            duracion, 
+          
             precioTotal, 
             estado
         });
@@ -93,10 +93,10 @@ const ventaserviciosPost = async (req, res = response) => {
 // Actualizar una venta existente
 const ventaserviciosPut = async (req, res = response) => {
     const { id } = req.params;
-    const { cita, cliente, servicios, duracion, precioTotal, estado } = req.body;
+    const { cita, cliente, servicios, precioTotal, estado } = req.body;
 
     // Validar campos obligatorios
-    if (!cita || !cliente || !servicios || !duracion || !precioTotal || estado === undefined) {
+    if (!cita || !cliente || !servicios  || !precioTotal || estado === undefined) {
         return res.status(400).json({
             msg: 'Cita, cliente, servicios, duración, precio total y estado son obligatorios.'
         });
