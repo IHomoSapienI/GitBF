@@ -19,7 +19,7 @@ const ventaserviciosGet = async (req, res = response) => {
                     select: 'nombre'
                 }
             })
-            .populate('empleado', 'nombre') // Obtener el empleado
+            .populate('empleado', 'nombreempleado') // Obtener el empleado
             .populate('servicios.servicio', 'nombreServicio precio tiempo')
             .lean();
 
