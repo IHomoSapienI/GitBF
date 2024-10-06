@@ -65,10 +65,10 @@ VentaServicioSchema.virtual('citaFecha').get(function() {
     return this.cita ? this.cita.fechacita : 'Fecha no especificada';
 });
 
-// Virtuals
-VentaServicioSchema.virtual('clienteNombre').get(function() {
-    return this.cliente ? this.cliente.nombrecliente : 'Cliente no especificado';
+VentaServicioSchema.virtual('empleadoNombre').get(function() {
+    return this.empleado ? this.empleado.nombreempleado : 'Empleado no especificado';
 });
+
 
 
 module.exports = model('VentaServicio', VentaServicioSchema);
