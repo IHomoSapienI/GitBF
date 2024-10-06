@@ -11,6 +11,11 @@ const VentaServicioSchema = Schema({
         ref: 'Cita',
         required: [true, 'La cita es obligatoria']
     },
+    empleado: { // Nueva relación con el empleado
+        type: Schema.Types.ObjectId, 
+        ref: 'Empleado',
+        required: [true, 'El empleado es obligatorio']
+    },
     servicios: [{
         servicio: { 
             type: Schema.Types.ObjectId, 

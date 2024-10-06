@@ -3,6 +3,7 @@ const Ventaservicio = require('../modules/ventaservicio');
 const Cita = require('../modules/cita');
 const Cliente = require('../modules/cliente');
 const Servicio = require('../modules/servicio');
+const Empleado = require('../modules/empleado'); // Importar el modelo de empleado
 
 // Obtener todas las ventas de servicios
 const ventaserviciosGet = async (req, res = response) => {
@@ -18,6 +19,7 @@ const ventaserviciosGet = async (req, res = response) => {
                     select: 'nombre'
                 }
             })
+            .populate('empleado', 'nombre') // Obtener el empleado
             .populate('servicios.servicio', 'nombreServicio precio tiempo')
             .lean();
 
@@ -39,7 +41,10 @@ const ventaserviciosGet = async (req, res = response) => {
                 fechacita: venta.cita.fechacita,
                 nombreempleado: venta.cita.nombreempleado ? venta.cita.nombreempleado.nombre : 'Empleado no especificado'
             } : null,
-            // Verificar si servicios es un arreglo antes de hacer map
+            empleado: venta.empleado ? {
+                _id: venta.empleado._id,
+                nombre: venta.empleado.nombre || 'Nombre no disponible'
+            } : null,
             servicios: Array.isArray(venta.servicios) ? venta.servicios.map(servicio => ({
                 ...servicio,
                 nombreServicio: servicio.servicio ? servicio.servicio.nombreServicio || 'Servicio no especificado' : 'Servicio no especificado'
@@ -55,27 +60,27 @@ const ventaserviciosGet = async (req, res = response) => {
     }
 };
 
-
-
+// Crear una nueva venta de servicio
 const ventaserviciosPost = async (req, res = response) => {
-    const { cita, cliente, servicios, precioTotal, estado } = req.body;
+    const { cita, cliente, empleado, servicios, precioTotal, estado } = req.body;
 
     // Verificación de campos obligatorios
-    if (!cita || !cliente || !servicios || !precioTotal || estado === undefined) {
+    if (!cita || !cliente || !empleado || !servicios || !precioTotal || estado === undefined) {
         return res.status(400).json({
-            msg: 'Cita, cliente, servicios, precio total y estado son obligatorios.'
+            msg: 'Cita, cliente, empleado, servicios, precio total y estado son obligatorios.'
         });
     }
 
     try {
-        const [existeCita, existeCliente] = await Promise.all([
+        const [existeCita, existeCliente, existeEmpleado] = await Promise.all([
             Cita.findById(cita),
-            Cliente.findById(cliente)
+            Cliente.findById(cliente),
+            Empleado.findById(empleado)
         ]);
 
-        if (!existeCita || !existeCliente) {
+        if (!existeCita || !existeCliente || !existeEmpleado) {
             return res.status(400).json({
-                msg: 'La cita o el cliente especificado no existe en la base de datos.'
+                msg: 'La cita, el cliente o el empleado especificado no existe en la base de datos.'
             });
         }
 
@@ -99,6 +104,7 @@ const ventaserviciosPost = async (req, res = response) => {
         const ventaservicio = new Ventaservicio({
             cita,
             cliente,
+            empleado, // Agregar el empleado a la venta
             servicios: serviciosConTiempo,
             precioTotal,
             estado
@@ -121,12 +127,12 @@ const ventaserviciosPost = async (req, res = response) => {
 // Actualizar una venta de servicio
 const ventaserviciosPut = async (req, res = response) => {
     const { id } = req.params;
-    const { cita, cliente, servicios, precioTotal, estado } = req.body;
+    const { cita, cliente, empleado, servicios, precioTotal, estado } = req.body;
 
     // Verificación de campos obligatorios
-    if (!cita || !cliente || !servicios || !precioTotal || estado === undefined) {
+    if (!cita || !cliente || !empleado || !servicios || !precioTotal || estado === undefined) {
         return res.status(400).json({
-            msg: 'Cita, cliente, servicios, precio total y estado son obligatorios.'
+            msg: 'Cita, cliente, empleado, servicios, precio total y estado son obligatorios.'
         });
     }
 
@@ -138,14 +144,15 @@ const ventaserviciosPut = async (req, res = response) => {
             });
         }
 
-        const [existeCita, existeCliente] = await Promise.all([
+        const [existeCita, existeCliente, existeEmpleado] = await Promise.all([
             Cita.findById(cita),
-            Cliente.findById(cliente)
+            Cliente.findById(cliente),
+            Empleado.findById(empleado)
         ]);
 
-        if (!existeCita || !existeCliente) {
+        if (!existeCita || !existeCliente || !existeEmpleado) {
             return res.status(400).json({
-                msg: 'La cita o el cliente especificado no existe en la base de datos.'
+                msg: 'La cita, el cliente o el empleado especificado no existe en la base de datos.'
             });
         }
 
@@ -168,6 +175,7 @@ const ventaserviciosPut = async (req, res = response) => {
         // Actualizar los campos
         venta.cita = cita;
         venta.cliente = cliente;
+        venta.empleado = empleado; // Actualizar el empleado
         venta.servicios = serviciosConTiempo;
         venta.precioTotal = precioTotal;
         venta.estado = estado;
@@ -186,6 +194,7 @@ const ventaserviciosPut = async (req, res = response) => {
     }
 };
 
+// Eliminar una venta de servicio
 const ventaserviciosDelete = async (req, res = response) => {
     const { id } = req.params;
 
