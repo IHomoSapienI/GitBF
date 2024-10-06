@@ -12,11 +12,11 @@ const ventaserviciosGet = async (req, res = response) => {
             .populate('cliente', 'nombrecliente')  // Obtener el cliente
             .populate({
                 path: 'cita',
-                select: 'fechacita nombreempleado',
+                select: 'fechacita',
                 populate: {
-                    path: 'nombreempleado',
+                    path: 'nombreempleado', // Este debe ser el campo correcto para el empleado en Cita
                     model: 'Empleado',
-                    select: 'nombre'
+                    select: 'nombreempleado' // Cambié de 'nombre' a 'nombreempleado'
                 }
             })
             .populate('empleado', 'nombreempleado') // Obtener el empleado
@@ -39,11 +39,11 @@ const ventaserviciosGet = async (req, res = response) => {
             cita: venta.cita ? {
                 _id: venta.cita._id,
                 fechacita: venta.cita.fechacita,
-                nombreempleado: venta.cita.nombreempleado ? venta.cita.nombreempleado.nombre : 'Empleado no especificado'
+                nombreempleado: venta.cita.nombreempleado ? venta.cita.nombreempleado.nombreempleado : 'Empleado no especificado' // Cambié a 'nombreempleado'
             } : null,
             empleado: venta.empleado ? {
                 _id: venta.empleado._id,
-                nombre: venta.empleado.nombre || 'Nombre no disponible'
+                nombreempleado: venta.empleado.nombreempleado || 'Nombre no disponible' // Cambié a 'nombreempleado'
             } : null,
             servicios: Array.isArray(venta.servicios) ? venta.servicios.map(servicio => ({
                 ...servicio,
