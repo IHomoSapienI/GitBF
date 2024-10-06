@@ -96,7 +96,7 @@ const ventaserviciosPost = async (req, res = response) => {
             servicio: servicio._id,
             nombreServicio: servicio.nombreServicio,
             precio: servicio.precio,
-            subtotal: servicio.precio, // Puedes ajustar el subtotal si es necesario
+            
             tiempo: servicio.tiempo
         }));
 
@@ -166,7 +166,7 @@ const ventaserviciosPut = async (req, res = response) => {
             servicio: servicio._id,
             nombreServicio: servicio.nombreServicio,
             precio: servicio.precio,
-            subtotal: servicio.precio, // Puedes ajustar el subtotal si es necesario
+            
             tiempo: servicio.tiempo
         }));
 
