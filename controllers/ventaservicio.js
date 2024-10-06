@@ -9,7 +9,7 @@ const Empleado = require('../modules/empleado'); // Importar el modelo de emplea
 const ventaserviciosGet = async (req, res = response) => {
     try {
         const ventaservicios = await Ventaservicio.find()
-            .populate('cliente', 'nombrecliente') // Obtener el cliente
+            .populate('cliente', 'nombrecliente documentocliente') // Obtener el cliente
             .populate('empleado', 'nombreempleado') // Obtener el empleado directamente
             .populate({
                 path: 'cita',
@@ -29,7 +29,8 @@ const ventaserviciosGet = async (req, res = response) => {
             ...venta,
             cliente: venta.cliente ? {
                 _id: venta.cliente._id,
-                nombrecliente: venta.cliente.nombrecliente || 'Nombre no disponible'
+                nombrecliente: venta.cliente.nombrecliente || 'Nombre no disponible',
+                documentocliente: venta.cliente.documentocliente || 'Documento no disponible' // Asegúrate de incluir el documento
             } : null,
             cita: venta.cita ? {
                 _id: venta.cita._id,
@@ -41,7 +42,12 @@ const ventaserviciosGet = async (req, res = response) => {
             } : null,
             servicios: Array.isArray(venta.servicios) ? venta.servicios.map(servicio => ({
                 ...servicio,
-                nombreServicio: servicio.servicio ? servicio.servicio.nombreServicio || 'Servicio no especificado' : 'Servicio no especificado'
+                servicio: servicio.servicio ? {
+                    _id: servicio.servicio._id,
+                    nombreServicio: servicio.servicio.nombreServicio || 'Servicio no especificado',
+                    precio: servicio.precio,
+                    tiempo: servicio.tiempo
+                } : null
             })) : []
         }));
 
@@ -54,7 +60,6 @@ const ventaserviciosGet = async (req, res = response) => {
         });
     }
 };
-
 // Crear una nueva venta de servicio
 const ventaserviciosPost = async (req, res = response) => {
     const { cita, cliente, empleado, servicios, precioTotal, estado } = req.body;
