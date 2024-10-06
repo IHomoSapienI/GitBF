@@ -27,11 +27,6 @@ const VentaServicioSchema = Schema({
             required: true,
             min: 0
         },
-        subtotal: { 
-            type: Number, 
-            required: true,
-            min: 0
-        },
         tiempo: { 
             type: Number, 
             required: true,
