@@ -8,7 +8,7 @@ const Servicio = require('../modules/servicio');
 const ventaserviciosGet = async (req, res = response) => {
     try {
         const ventaservicios = await Ventaservicio.find()
-            .populate('cliente', 'nombrecliente')
+            .populate('cliente', 'nombrecliente')  // Obtener el cliente
             .populate({
                 path: 'cita',
                 select: 'fechacita nombreempleado',
@@ -27,7 +27,7 @@ const ventaserviciosGet = async (req, res = response) => {
             });
         }
 
-        // Asegúrate de que todos los campos estén correctamente formateados
+        // Formatear los datos para que se muestren correctamente
         const ventasFormateadas = ventaservicios.map(venta => ({
             ...venta,
             cliente: venta.cliente ? {
@@ -43,7 +43,7 @@ const ventaserviciosGet = async (req, res = response) => {
             servicios: Array.isArray(venta.servicios) ? venta.servicios.map(servicio => ({
                 ...servicio,
                 nombreServicio: servicio.servicio ? servicio.servicio.nombreServicio || 'Servicio no especificado' : 'Servicio no especificado'
-            })) : [] // Proporciona un arreglo vacío si no es un arreglo
+            })) : []
         }));
 
         res.json({ ventaservicios: ventasFormateadas });
@@ -57,7 +57,6 @@ const ventaserviciosGet = async (req, res = response) => {
 
 
 
-// Crear una nueva venta de servicio
 const ventaserviciosPost = async (req, res = response) => {
     const { cita, cliente, servicios, precioTotal, estado } = req.body;
 
@@ -80,31 +79,28 @@ const ventaserviciosPost = async (req, res = response) => {
             });
         }
 
-        // Obtiene solo los IDs de los servicios
+        // Validar los servicios
         const serviciosIds = servicios.map(servicio => servicio.servicio);
         const serviciosValidos = await Servicio.find({ _id: { $in: serviciosIds } });
 
-        // Verificación de existencia de servicios
         if (serviciosValidos.length !== servicios.length) {
             return res.status(400).json({
                 msg: 'Uno o más servicios no existen en la base de datos.'
             });
         }
 
-        // Mapeo de servicios a formato adecuado
         const serviciosConTiempo = serviciosValidos.map(servicio => ({
             servicio: servicio._id,
             nombreServicio: servicio.nombreServicio,
             precio: servicio.precio,
-            
             tiempo: servicio.tiempo
         }));
 
-        const ventaservicio = new Ventaservicio({ 
-            cita, 
-            cliente, 
+        const ventaservicio = new Ventaservicio({
+            cita,
+            cliente,
             servicios: serviciosConTiempo,
-            precioTotal, 
+            precioTotal,
             estado
         });
 
@@ -166,11 +162,10 @@ const ventaserviciosPut = async (req, res = response) => {
             servicio: servicio._id,
             nombreServicio: servicio.nombreServicio,
             precio: servicio.precio,
-            
             tiempo: servicio.tiempo
         }));
 
-        // Actualiza los campos de la venta
+        // Actualizar los campos
         venta.cita = cita;
         venta.cliente = cliente;
         venta.servicios = serviciosConTiempo;
@@ -191,7 +186,6 @@ const ventaserviciosPut = async (req, res = response) => {
     }
 };
 
-// Eliminar una venta
 const ventaserviciosDelete = async (req, res = response) => {
     const { id } = req.params;
 
