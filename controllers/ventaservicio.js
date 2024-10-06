@@ -6,12 +6,15 @@ const Servicio = require('../modules/servicio');
 const Empleado = require('../modules/empleado'); // Importar el modelo de empleado
 
 // Obtener todas las ventas de servicios
-// Obtener todas las ventas de servicios
 const ventaserviciosGet = async (req, res = response) => {
     try {
         const ventaservicios = await Ventaservicio.find()
             .populate('cliente', 'nombrecliente') // Obtener el cliente
             .populate('empleado', 'nombreempleado') // Obtener el empleado directamente
+            .populate({
+                path: 'cita',
+                select: 'fechacita', // Obtener solo la fecha de la cita
+            })
             .populate('servicios.servicio', 'nombreServicio precio tiempo') // Obtener los servicios
             .lean();
 
@@ -27,6 +30,10 @@ const ventaserviciosGet = async (req, res = response) => {
             cliente: venta.cliente ? {
                 _id: venta.cliente._id,
                 nombrecliente: venta.cliente.nombrecliente || 'Nombre no disponible'
+            } : null,
+            cita: venta.cita ? {
+                _id: venta.cita._id,
+                fechacita: venta.cita.fechacita || 'Fecha no disponible'
             } : null,
             empleado: venta.empleado ? {
                 _id: venta.empleado._id,
@@ -47,7 +54,6 @@ const ventaserviciosGet = async (req, res = response) => {
         });
     }
 };
-
 
 // Crear una nueva venta de servicio
 const ventaserviciosPost = async (req, res = response) => {
