@@ -6,21 +6,13 @@ const Servicio = require('../modules/servicio');
 const Empleado = require('../modules/empleado'); // Importar el modelo de empleado
 
 // Obtener todas las ventas de servicios
+// Obtener todas las ventas de servicios
 const ventaserviciosGet = async (req, res = response) => {
     try {
         const ventaservicios = await Ventaservicio.find()
-            .populate('cliente', 'nombrecliente')  // Obtener el cliente
-            .populate({
-                path: 'cita',
-                select: 'fechacita',
-                populate: {
-                    path: 'nombreempleado', // Este debe ser el campo correcto para el empleado en Cita
-                    model: 'Empleado',
-                    select: 'nombreempleado' // Cambié de 'nombre' a 'nombreempleado'
-                }
-            })
-            .populate('empleado', 'nombreempleado') // Obtener el empleado
-            .populate('servicios.servicio', 'nombreServicio precio tiempo')
+            .populate('cliente', 'nombrecliente') // Obtener el cliente
+            .populate('empleado', 'nombreempleado') // Obtener el empleado directamente
+            .populate('servicios.servicio', 'nombreServicio precio tiempo') // Obtener los servicios
             .lean();
 
         if (ventaservicios.length === 0) {
@@ -36,14 +28,9 @@ const ventaserviciosGet = async (req, res = response) => {
                 _id: venta.cliente._id,
                 nombrecliente: venta.cliente.nombrecliente || 'Nombre no disponible'
             } : null,
-            cita: venta.cita ? {
-                _id: venta.cita._id,
-                fechacita: venta.cita.fechacita,
-                nombreempleado: venta.cita.nombreempleado ? venta.cita.nombreempleado.nombreempleado : 'Empleado no especificado' // Cambié a 'nombreempleado'
-            } : null,
             empleado: venta.empleado ? {
                 _id: venta.empleado._id,
-                nombreempleado: venta.empleado.nombreempleado || 'Nombre no disponible' // Cambié a 'nombreempleado'
+                nombreempleado: venta.empleado.nombreempleado || 'Nombre no disponible'
             } : null,
             servicios: Array.isArray(venta.servicios) ? venta.servicios.map(servicio => ({
                 ...servicio,
@@ -55,10 +42,12 @@ const ventaserviciosGet = async (req, res = response) => {
     } catch (error) {
         console.error('Error al obtener las ventas de los servicios:', error);
         res.status(500).json({
-            msg: 'Error al obtener las ventas de los servicios'
+            msg: 'Error al obtener las ventas de los servicios',
+            error: error.message // Incluyendo detalles del error para depuración
         });
     }
 };
+
 
 // Crear una nueva venta de servicio
 const ventaserviciosPost = async (req, res = response) => {
