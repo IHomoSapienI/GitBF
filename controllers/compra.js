@@ -61,7 +61,7 @@ exports.crearCompra = async (req, res) => {
 exports.obtenerCompras = async (req, res) => {
     try {
         const compras = await Compra.find()
-            .populate('proveedor', 'nombre contacto')
+            .populate('proveedor', 'nombreProveedor contacto')
             .populate('insumos.insumo', 'nombreInsumo precio')
             .limit(100);
 
