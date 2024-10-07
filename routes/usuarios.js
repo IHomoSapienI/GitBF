@@ -13,12 +13,12 @@ const router = express.Router();
 router.post('/', usuariosPost);
 
 // Ruta privada para obtener usuarios (requiere autenticación)
-router.get('/', validarJWT, usuariosGet); 
+router.get('/', usuariosGet); 
 
 // Ruta privada para actualizar un usuario (requiere autenticación)
-router.put('/:id', validarJWT, usuariosPut); 
+router.put('/:id', usuariosPut); 
 
 // Ruta privada para eliminar un usuario (requiere autenticación)
-router.delete('/:id', validarJWT, usuariosDelete);
+router.delete('/:id', usuariosDelete);
 
 module.exports = router;
