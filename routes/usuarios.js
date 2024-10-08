@@ -10,7 +10,7 @@ const {
     usuariosPut,
     usuariosDelete
 } = require('../controllers/usuario');
-
+router.use(validarJWT);
 const router = express.Router();
 
 // Ruta pública para registrar un usuario
