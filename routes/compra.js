@@ -12,19 +12,21 @@ const verificarPermisos = require('../middlewares/verificarPermisos'); // Asegú
 
 const router = express.Router();
 
+router.use(validarJWT);
+
 // Ruta para crear una nueva compra
-router.post('/', validarJWT, verificarPermisos(['crearCompras']), crearCompra);
+router.post('/', verificarPermisos(['crearCompras']), crearCompra);
 
 // Ruta para obtener todas las compras
-router.get('/', validarJWT, verificarPermisos(['verCompras']), obtenerCompras);
+router.get('/', verificarPermisos(['verCompras']), obtenerCompras);
 
 // Ruta para obtener una compra por ID
-router.get('/:id', validarJWT, verificarPermisos(['verCompras']), obtenerCompraPorId);
+router.get('/:id', verificarPermisos(['verCompras']), obtenerCompraPorId);
 
 // Ruta para actualizar una compra
-router.put('/:id', validarJWT, verificarPermisos(['actualizarCompras']), actualizarCompra);
+router.put('/:id', verificarPermisos(['actualizarCompras']), actualizarCompra);
 
 // Ruta para eliminar una compra
-router.delete('/:id', validarJWT, verificarPermisos(['eliminarCompras']), eliminarCompra);
+router.delete('/:id', verificarPermisos(['eliminarCompras']), eliminarCompra);
 
 module.exports = router;
