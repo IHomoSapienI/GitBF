@@ -4,7 +4,10 @@ const { serviciosGet, serviciosPost, serviciosPut, serviciosDelete } = require('
 const multer = require('multer');
 const path = require('path');
 const express = require('express');
+const { validarJWT } = require('../middlewares/verificartoken'); // Importar el middleware
 
+const verificarPermisos = require('../middlewares/verificarPermisos'); // Asegúrate de que la ruta sea correcta
+router.use(validarJWT);
 // Configuración de multer para la subida de imágenes
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -33,9 +36,9 @@ const upload = multer({
 router.use('/uploads', express.static('uploads'));
 
 // Rutas
-router.get('/', serviciosGet);
-router.post('/', upload.single('imagen'), serviciosPost);
-router.put('/:id', upload.single('imagen'), serviciosPut); // Actualizar un servicio
-router.delete('/:id', serviciosDelete);
+router.get('/', verificarPermisos (['verServicios']), serviciosGet);
+router.post('/', upload.single('imagen'), verificarPermisos (['crearServicios']),serviciosPost);
+router.put('/:id', upload.single('imagen'), verificarPermisos (['actualizarServicios']),serviciosPut); // Actualizar un servicio
+router.delete('/:id', verificarPermisos (['eliminarServicios']), serviciosDelete);
 
 module.exports = router;

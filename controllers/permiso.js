@@ -36,7 +36,7 @@ const permisosPost = async (req, res = response) => {
         });
     }
 
-    const categoriasValidas = ['usuarios', 'roles', 'configuración', 'reportes', 'compras']; // Incluye las categorías que deseas permitir
+    const categoriasValidas = ['usuarios', 'roles', 'configuración', 'reportes', 'compras', 'servicios', 'ventaServicios', 'productos', 'ventaProductos','citas','empleados','clientes','insumos','proveedores']; // Incluye las categorías que deseas permitir
 if (!categoriasValidas.includes(categoria)) {
     return res.status(400).json({
         msg: 'La categoría debe ser una de las siguientes: usuarios, roles, configuración, reportes, compras.'
