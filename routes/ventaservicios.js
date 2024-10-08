@@ -13,6 +13,6 @@ router.post('/', verificarPermisos (['crearVentaServicio']),ventaserviciosPost)
 
 router.put('/:id', verificarPermisos (['actualizarVentaServicio']), ventaserviciosPut)
 
-router.delete('/:id', verificarPermisos (['eliminarVentaServicios']), ventaserviciosDelete)
+router.delete('/:id', verificarPermisos (['eliminarVentaServicio']), ventaserviciosDelete)
 
 module.exports = router
