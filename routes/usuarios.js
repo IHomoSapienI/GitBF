@@ -1,15 +1,8 @@
-const { Router } = require('express');
+
 const express = require('express');
 const { validarJWT } = require('../middlewares/verificartoken'); // Importar el middleware
 const verificarPermisos = require('../middlewares/verificarPermisos'); // Asegúrate de que la ruta sea correcta
-
-
-const {
-    usuariosGet,
-    usuariosPost,
-    usuariosPut,
-    usuariosDelete
-} = require('../controllers/usuario');
+const {usuariosGet, usuariosPost, usuariosPut, usuariosDelete } = require('../controllers/usuario');
 router.use(validarJWT);
 const router = express.Router();
 
