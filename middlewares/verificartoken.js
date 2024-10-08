@@ -17,7 +17,7 @@ const validarJWT = (req, res, next) => {
       next();
   } catch (error) {
       return res.status(401).json({
-          msg: 'Token no válido'
+          msg: 'No tienes permiso para estar aqui :) post: tu token no es válido'
       });
   }
 };
