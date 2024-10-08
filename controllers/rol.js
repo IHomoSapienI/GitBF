@@ -1,12 +1,12 @@
 const { response } = require('express');
 const mongoose = require('mongoose');
 const Rol = require('../modules/rol'); // Importar el modelo de Rol
-const Permiso = require('../modules/permiso');
+const Permiso = require('../modules/permiso'); // Importar el modelo de Permiso
 
 // Método GET para obtener los roles
 const rolesGet = async (req, res = response) => {
     try {
-        const roles = await Rol.find(); // Consultar todos los documentos de la colección
+        const roles = await Rol.find().populate('permisoRol'); // Populate para mostrar detalles de permisos
 
         if (roles.length === 0) {
             return res.status(404).json({
@@ -27,6 +27,7 @@ const rolesGet = async (req, res = response) => {
 const rolesPost = async (req, res = response) => {
     const { nombreRol, permisoRol, estadoRol } = req.body; // Extraer datos del cuerpo de la solicitud
     console.log('Datos recibidos en backend:', { nombreRol, permisoRol, estadoRol });
+
     // Asegúrate de que permisoRol sea un arreglo
     let permisosArray;
     if (typeof permisoRol === 'string') {
@@ -60,40 +61,38 @@ const rolesPost = async (req, res = response) => {
         });
     }
 
-    // Crear una nueva instancia del modelo Rol
-    const rol = new Rol({ nombreRol, permisoRol: permisosArray, estadoRol });
+    // Determinar si es un rol admin
+    const isAdmin = nombreRol.toLowerCase() === "admin"; // Compara con "admin" en minúsculas
 
-    let msg = '';
+    // Crear una nueva instancia del modelo Rol
+    const rol = new Rol({ nombreRol, permisoRol: permisosArray, estadoRol, esAdmin: isAdmin });
 
     try {
         // Guardar el nuevo rol en la base de datos
         await rol.save();
-        msg = 'Rol asignado correctamente';
+        res.status(201).json({ msg: 'Rol asignado correctamente', rol });
     } catch (error) {
         console.log(error);
-
         if (error.name === 'ValidationError') {
             console.error(Object.values(error.errors).map(val => val.message));
-            msg = Object.values(error.errors).map(val => val.message).join(', ');
+            res.status(400).json({ msg: Object.values(error.errors).map(val => val.message).join(', ') });
         } else {
-            msg = 'Error al crear el rol';
+            res.status(500).json({ msg: 'Error al crear el rol' });
         }
     }
-
-    res.json({ msg });
 };
 
 // Método PUT para actualizar un rol por su id
-const rolesPut = async (req, res) => {
+const rolesPut = async (req, res = response) => {
     const { id } = req.params;
-    const { nombreRol, permisoRol, estadoRol } = req.body;
+    const { nombreRol, permisoRol, estadoRol } = req.body; // No necesitas esAdmin aquí, ya que se establece automáticamente
 
     try {
         // Verifica que el rol existe antes de actualizar
         const rolExistente = await Rol.findById(id);
         if (!rolExistente) {
             return res.status(404).json({
-                message: 'Rol no encontrado',
+                msg: 'Rol no encontrado',
             });
         }
 
@@ -102,20 +101,22 @@ const rolesPut = async (req, res) => {
         rolExistente.permisoRol = permisoRol || rolExistente.permisoRol;
         rolExistente.estadoRol = estadoRol !== undefined ? estadoRol : rolExistente.estadoRol;
 
+        // Determinar si es un rol admin al actualizar
+        rolExistente.esAdmin = rolExistente.nombreRol.toLowerCase() === "admin";
+
         await rolExistente.save();
 
         res.json({
-            message: 'Rol actualizado exitosamente',
+            msg: 'Rol actualizado exitosamente',
             rol: rolExistente,
         });
     } catch (error) {
         console.error(error);
         res.status(500).json({
-            message: 'Error al actualizar el rol',
+            msg: 'Error al actualizar el rol',
         });
     }
 };
-
 
 // Método DELETE para eliminar un rol por su id
 const rolesDelete = async (req, res = response) => {

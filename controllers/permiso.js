@@ -1,5 +1,5 @@
 const { response } = require('express');
-const Permiso = require('../modules/permiso');
+const Permiso = require('../modules/permiso'); // Asegúrate de que el path sea correcto
 
 // Obtener todos los permisos
 const permisosGet = async (req, res = response) => {
@@ -19,13 +19,33 @@ const permisosGet = async (req, res = response) => {
 
 // Crear un nuevo permiso
 const permisosPost = async (req, res = response) => {
-    const { nombrePermiso, descripcion, activo } = req.body;
-    if (!nombrePermiso || !descripcion || activo === undefined) {
+    const { nombrePermiso, descripcion, activo, categoria, nivel } = req.body;
+
+    // Validar campos obligatorios
+    if (!nombrePermiso || !descripcion || activo === undefined || !categoria || !nivel) {
         return res.status(400).json({
-            msg: 'Nombre, descripción y estado activo del permiso son obligatorios.'
+            msg: 'Nombre, descripción, estado activo, categoría y nivel son obligatorios.'
         });
     }
-    const permiso = new Permiso({ nombrePermiso, descripcion, activo });
+
+    // Verificar que el nivel sea válido
+    const nivelesValidos = ['read', 'write', 'delete'];
+    if (!nivelesValidos.includes(nivel)) {
+        return res.status(400).json({
+            msg: 'El nivel debe ser uno de los siguientes: read, write, delete.'
+        });
+    }
+
+    const categoriasValidas = ['usuarios', 'roles', 'configuración', 'reportes', 'compras']; // Incluye las categorías que deseas permitir
+if (!categoriasValidas.includes(categoria)) {
+    return res.status(400).json({
+        msg: 'La categoría debe ser una de las siguientes: usuarios, roles, configuración, reportes, compras.'
+    });
+}
+
+
+    const permiso = new Permiso({ nombrePermiso, descripcion, activo, categoria, nivel });
+
     try {
         await permiso.save();
         res.status(201).json({
@@ -41,16 +61,30 @@ const permisosPost = async (req, res = response) => {
 // Actualizar un permiso
 const permisosPut = async (req, res = response) => {
     const { id } = req.params;
-    const { nombrePermiso, descripcion, activo } = req.body;
+    const { nombrePermiso, descripcion, activo, categoria, nivel } = req.body;
+
     try {
         const permiso = await Permiso.findById(id);
         if (!permiso) {
             return res.status(404).json({ ok: false, msg: 'Permiso no encontrado' });
         }
 
+        // Actualizar solo los campos que se proporcionan
         permiso.nombrePermiso = nombrePermiso || permiso.nombrePermiso;
         permiso.descripcion = descripcion || permiso.descripcion;
         permiso.activo = activo !== undefined ? activo : permiso.activo;
+        permiso.categoria = categoria || permiso.categoria; // Solo se actualiza si se proporciona un valor
+        
+        // Validar el nivel antes de actualizarlo
+        if (nivel) {
+            const nivelesValidos = ['read', 'write', 'delete'];
+            if (!nivelesValidos.includes(nivel)) {
+                return res.status(400).json({
+                    msg: 'El nivel debe ser uno de los siguientes: read, write, delete.'
+                });
+            }
+            permiso.nivel = nivel; // Solo se actualiza si se proporciona un valor válido
+        }
 
         await permiso.save();
         res.json({
