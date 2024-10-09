@@ -7,7 +7,7 @@ const express = require('express');
 const { validarJWT } = require('../middlewares/verificartoken'); // Importar el middleware
 
 const verificarPermisos = require('../middlewares/verificarPermisos'); // Asegúrate de que la ruta sea correcta
-router.use(validarJWT);
+
 // Configuración de multer para la subida de imágenes
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
