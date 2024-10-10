@@ -6,7 +6,7 @@ const Servicio = require('../modules/servicio'); // Importar el modelo de servic
 // Crear una nueva cita
 const crearCita = async (req, res) => {
     try {
-        const { nombreempleado, nombrecliente, fechacita, montototal, estadocita, servicios } = req.body;
+        const { nombreempleado, nombrecliente, fechacita, montototal, estadocita, nombreservicio } = req.body;
 
         // Verificar que el empleado y cliente existen
         const empleado = await Empleado.findById(nombreempleado);
@@ -16,12 +16,10 @@ const crearCita = async (req, res) => {
             return res.status(400).json({ message: 'Empleado o cliente no encontrados' });
         }
 
-        // Verificar que los servicios existen y son válidos
-        if (servicios && servicios.length > 0) {
-            const serviciosValidos = await Servicio.find({ '_id': { $in: servicios } });
-            if (serviciosValidos.length !== servicios.length) {
-                return res.status(400).json({ message: 'Uno o más servicios no encontrados' });
-            }
+        // Verificar que el servicio existe y es válido
+        const servicioValido = await Servicio.findById(nombreservicio);
+        if (!servicioValido) {
+            return res.status(400).json({ message: 'Servicio no encontrado' });
         }
 
         // Crear una nueva instancia de Cita
@@ -31,7 +29,7 @@ const crearCita = async (req, res) => {
             fechacita,
             montototal,
             estadocita,
-            servicios // Incluir los servicios en la nueva cita
+            nombreservicio // Guardar el ID del servicio seleccionado
         });
 
         // Guardar la cita en la base de datos
@@ -46,9 +44,9 @@ const crearCita = async (req, res) => {
 const obtenerCitas = async (req, res) => {
     try {
         const citas = await Cita.find()
-            .populate('nombreempleado', 'nombreempleado') // Puedes incluir más campos si es necesario
+            .populate('nombreempleado', 'nombreempleado') // Incluye campos adicionales si es necesario
             .populate('nombrecliente', 'nombrecliente') // Idem
-            .populate('servicios', 'nombreServicio precio'); // Asegúrate de que los campos existan en el modelo Servicio
+            .populate('servicio', 'nombreservicio'); // Asegúrate de que los campos existan en el modelo Servicio
         res.json({ citas });
     } catch (error) {
         res.status(500).json({ message: 'Error al obtener citas', error });
@@ -62,7 +60,7 @@ const obtenerCitaPorId = async (req, res) => {
         const cita = await Cita.findById(id)
             .populate('nombreempleado', 'nombreempleado')
             .populate('nombrecliente', 'nombrecliente')
-            .populate('servicios', 'nombreServicio precio'); // Asegúrate de hacer populate para los servicios
+            .populate('servicio', 'nombreservicio'); // Asegúrate de hacer populate para el servicio
         if (!cita) {
             return res.status(404).json({ message: 'Cita no encontrada' });
         }
@@ -76,7 +74,7 @@ const obtenerCitaPorId = async (req, res) => {
 const actualizarCita = async (req, res) => {
     try {
         const { id } = req.params;
-        const { nombreempleado, nombrecliente, fechacita, montototal, estadocita, servicios } = req.body;
+        const { nombreempleado, nombrecliente, fechacita, montototal, estadocita, nombreservicio } = req.body;
 
         const cita = await Cita.findByIdAndUpdate(id, {
             nombreempleado,
@@ -84,11 +82,11 @@ const actualizarCita = async (req, res) => {
             fechacita,
             montototal,
             estadocita,
-            servicios // Incluir servicios en la actualización
+            nombreservicio // Actualizamos el servicio en la cita
         }, { new: true })
         .populate('nombreempleado', 'nombreempleado')
         .populate('nombrecliente', 'nombrecliente')
-        .populate('servicios', 'nombreServicio precio'); // Asegúrate de hacer populate para los servicios
+        .populate('servicio', 'nombreservicio'); // Asegúrate de hacer populate para el servicio
 
         if (!cita) {
             return res.status(404).json({ message: 'Cita no encontrada' });

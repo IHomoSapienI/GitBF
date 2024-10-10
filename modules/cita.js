@@ -25,10 +25,11 @@ const CitaSchema = Schema({
         enum: ['Pendiente', 'Confirmada', 'Cancelada'], // Enum para el estado de la cita
         default: 'Pendiente'
     },
-    servicios: [{ // Nueva referencia a servicios
+    nombreServicio: { // Nueva referencia a servicios
         type: Schema.Types.ObjectId,
-        ref: 'Servicio' // Asegúrate de que este sea el nombre correcto del modelo Servicio
-    }]
+        ref: 'Servicio', // Asegúrate de que este sea el nombre correcto del modelo Servicio
+        required: true
+    }
 });
 
 module.exports = model('Cita', CitaSchema);
