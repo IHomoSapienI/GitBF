@@ -2,26 +2,26 @@ const { Schema, model } = require('mongoose');
 
 // Definir el esquema de venta de productos
 const VentaProductoSchema = Schema({
-    productos: [
-        {
-            producto: {
-                type: Schema.Types.ObjectId,
-                ref: 'Producto',  // Relación con el modelo de Producto
-                required: true
-            },
-            cantidad: {
-                type: Number,
-                required: true
-            },
-            precio: {
-                type: Number,
-                required: true  // El precio se obtendrá del producto seleccionado
-            }
-        }
-    ],
-    nombrecliente: {
+    nombreProducto: {
+        type: Schema.Types.ObjectId,
+        ref: 'Producto',  // Relación con el modelo de Producto
+        required: true
+    },
+    nombreCliente: {
         type: Schema.Types.ObjectId,
         ref: 'Cliente',  // Relación con el modelo de Cliente
+        required: true
+    },
+    descripcion: {
+        type: String,
+        required: false
+    },
+    precio: {
+        type: Number,
+        required: true  // El precio se obtendrá del producto seleccionado
+    },
+    cantidad: {
+        type: Number,
         required: true
     },
     subtotal: {
@@ -43,10 +43,9 @@ const VentaProductoSchema = Schema({
 });
 
 // Middleware para calcular el subtotal antes de guardar la venta
-VentaProductoSchema.pre('save', function (next) {
-    if (this.isModified('productos')) {
-        this.subtotal = this.productos.reduce((acc, item) => acc + (item.cantidad * item.precio), 0);
-        this.total = this.subtotal; // Cambia si deseas agregar impuestos o descuentos
+VentaProductoSchema.pre('save', async function (next) {
+    if (this.isModified('cantidad') || this.isModified('precio')) {
+        this.subtotal = this.cantidad * this.precio;  // Cálculo del subtotal
     }
     next();
 });
