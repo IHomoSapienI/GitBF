@@ -61,16 +61,16 @@ exports.crearCompra = async (req, res) => {
 // Obtener todas las compras
 exports.obtenerCompras = async (req, res) => {
     try {
-      const compra = await Compra.findById(req.params.id).populate('insumos.insumo');
-      if (!compra) {
-        res.status(404).json({ mensaje: 'Compra no encontrada' });
-      } else {
-        res.json(compra);
-      }
-    } catch (err) {
-      res.status(500).json({ mensaje: 'Error al obtener compra' });
+        const compras = await Compra.find()
+            .populate('proveedor', 'nombreProveedor contacto')
+            .populate('insumos.insumo', 'nombreInsumo precio')
+            .limit(100);
+
+        return res.status(200).json(compras);
+    } catch (error) {
+        return res.status(500).json({ mensaje: 'Error al obtener las compras', error: error.message });
     }
-  };
+};
 
 // Obtener una compra por ID
 exports.obtenerCompraPorId = async (req, res) => {
@@ -97,24 +97,54 @@ exports.obtenerCompraPorId = async (req, res) => {
 // Actualizar una compra
 exports.actualizarCompra = async (req, res) => {
     try {
-      const compra = await Compra.findById(req.params.id).populate('insumos.insumo');
-      if (!compra) {
-        res.status(404).json({ mensaje: 'Compra no encontrada' });
-      } else {
-        compra.proveedor = req.body.proveedor;
-        compra.recibo = req.body.recibo;
-        compra.fechaCompra = req.body.fechaCompra;
-        compra.fechaRegistro = req.body.fechaRegistro;
-        compra.monto = req.body.monto;
-        compra.estado = req.body.estado;
-        compra.insumos = req.body.insumos;
-        await compra.save();
-        res.json(compra);
-      }
-    } catch (err) {
-      res.status(500).json({ mensaje: 'Error al actualizar compra' });
+        const { proveedor, recibo, fechaCompra, estado, insumos } = req.body;
+
+        if (!insumos || insumos.length === 0) {
+            return res.status(400).json({ mensaje: 'No se proporcionaron insumos para la compra' });
+        }
+
+        // Verificar que el proveedor existe
+        if (proveedor) {
+            const proveedorExistente = await Proveedor.findById(proveedor);
+            if (!proveedorExistente) {
+                return res.status(400).json({ mensaje: 'Proveedor no encontrado' });
+            }
+        }
+
+        // Verificar que los insumos existen
+        const insumosExistentes = await Insumo.find({ _id: { $in: insumos.map(item => item.insumo) } });
+        const insumosFaltantes = insumos.filter(item => 
+            !insumosExistentes.some(insumo => insumo._id.equals(item.insumo))
+        );
+
+        if (insumosFaltantes.length > 0) {
+            return res.status(400).json({
+                mensaje: 'Algunos insumos no fueron encontrados',
+                insumosFaltantes
+            });
+        }
+
+        // Calcular el nuevo monto total
+        const montoTotal = insumos.reduce((total, item) => {
+            const insumoEncontrado = insumosExistentes.find(insumo => insumo._id.equals(item.insumo));
+            return total + (insumoEncontrado.precio * item.cantidad);
+        }, 0);
+
+        const compraActualizada = await Compra.findByIdAndUpdate(
+            req.params.id,
+            { proveedor, recibo, fechaCompra, monto: montoTotal, estado, insumos },
+            { new: true, runValidators: true }
+        );
+
+        if (!compraActualizada) {
+            return res.status(404).json({ mensaje: 'Compra no encontrada' });
+        }
+
+        return res.status(200).json(compraActualizada);
+    } catch (error) {
+        return res.status(500).json({ mensaje: 'Error al actualizar la compra', error: error.message });
     }
-  };
+};
 
 
 // Eliminar una compra
