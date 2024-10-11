@@ -19,7 +19,7 @@ const VentaProductoSchema = Schema({
             }
         }
     ],
-    nombreCliente: {
+    nombrecliente: {
         type: Schema.Types.ObjectId,
         ref: 'Cliente',  // Relación con el modelo de Cliente
         required: true

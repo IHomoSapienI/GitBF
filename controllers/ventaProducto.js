@@ -5,10 +5,10 @@ const Cliente = require('../modules/cliente'); // Asegúrate de tener el modelo 
 // Crear una nueva venta de producto
 const crearVentaProducto = async (req, res) => {
     try {
-        const { productos, nombreCliente } = req.body;
+        const { productos, nombrecliente } = req.body; // Cambiado a nombrecliente
 
         // Verificar que el cliente exista
-        const cliente = await Cliente.findById(nombreCliente);
+        const cliente = await Cliente.findById(nombrecliente); // Cambiado a nombrecliente
         if (!cliente) {
             return res.status(400).json({ msg: 'Cliente no encontrado' });
         }
@@ -30,7 +30,7 @@ const crearVentaProducto = async (req, res) => {
         // Crear la venta
         const venta = new VentaProducto({
             productos,
-            nombreCliente,
+            nombrecliente, // Cambiado a nombrecliente
             subtotal,
             total: subtotal, // Cambia si deseas agregar impuestos o descuentos
             estado: true,  // Por defecto el estado es verdadero (completado)
@@ -50,7 +50,7 @@ const obtenerVentasProductos = async (req, res) => {
     try {
         const ventas = await VentaProducto.find()
             .populate('productos.producto')  // Populate para obtener datos del producto
-            .populate('nombreCliente');  // Populate para obtener datos del cliente
+            .populate('nombrecliente');  // Cambiado a nombrecliente
 
         res.status(200).json(ventas);
     } catch (error) {
@@ -65,7 +65,7 @@ const obtenerVentaProductoPorId = async (req, res) => {
         const { id } = req.params;
         const venta = await VentaProducto.findById(id)
             .populate('productos.producto')
-            .populate('nombreCliente');
+            .populate('nombrecliente');  // Cambiado a nombrecliente
 
         if (!venta) {
             return res.status(404).json({ msg: 'Venta de producto no encontrada' });
@@ -82,7 +82,7 @@ const obtenerVentaProductoPorId = async (req, res) => {
 const actualizarVentaProducto = async (req, res) => {
     try {
         const { id } = req.params;
-        const { productos, nombreCliente } = req.body;
+        const { productos, nombrecliente } = req.body; // Cambiado a nombrecliente
 
         let venta = await VentaProducto.findById(id);
 
@@ -91,7 +91,7 @@ const actualizarVentaProducto = async (req, res) => {
         }
 
         // Verificar que el cliente exista
-        const cliente = await Cliente.findById(nombreCliente);
+        const cliente = await Cliente.findById(nombrecliente); // Cambiado a nombrecliente
         if (!cliente) {
             return res.status(400).json({ msg: 'Cliente no encontrado' });
         }
@@ -112,7 +112,7 @@ const actualizarVentaProducto = async (req, res) => {
 
         // Actualizar la venta
         venta.productos = productos;
-        venta.nombreCliente = nombreCliente;
+        venta.nombrecliente = nombrecliente; // Cambiado a nombrecliente
         venta.subtotal = subtotal;
         venta.total = subtotal; // Cambia si deseas agregar impuestos o descuentos
 
