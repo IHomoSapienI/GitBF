@@ -5,28 +5,36 @@ const Cliente = require('../modules/cliente'); // Asegúrate de tener el modelo 
 // Crear una nueva venta de producto
 const crearVentaProducto = async (req, res) => {
     try {
-        const { nombreProducto, nombreCliente, descripcion, precio, cantidad } = req.body;
+        const { productos, nombreCliente } = req.body;
 
-        // Verificar que el producto y el cliente existan
-        const producto = await Producto.findById(nombreProducto);
+        // Verificar que el cliente exista
         const cliente = await Cliente.findById(nombreCliente);
-
-        if (!producto) {
-            return res.status(400).json({ msg: 'Producto no encontrado' });
-        }
-
         if (!cliente) {
             return res.status(400).json({ msg: 'Cliente no encontrado' });
         }
 
+        // Inicializar subtotal
+        let subtotal = 0;
+
+        // Verificar que cada producto exista y calcular subtotal
+        for (let item of productos) {
+            const producto = await Producto.findById(item.producto);
+            if (!producto) {
+                return res.status(400).json({ msg: `Producto no encontrado: ${item.producto}` });
+            }
+
+            // Calcular el subtotal para cada producto
+            subtotal += item.cantidad * item.precio; // Asume que el precio es correcto
+        }
+
+        // Crear la venta
         const venta = new VentaProducto({
-            nombreProducto,
+            productos,
             nombreCliente,
-            descripcion,
-            precio,
-            cantidad,
-            subtotal: cantidad * precio,
-            total: cantidad * precio // Asume que el total es igual al subtotal en esta fase
+            subtotal,
+            total: subtotal, // Cambia si deseas agregar impuestos o descuentos
+            estado: true,  // Por defecto el estado es verdadero (completado)
+            fechaVenta: new Date() // Asigna la fecha actual
         });
 
         await venta.save();
@@ -41,7 +49,7 @@ const crearVentaProducto = async (req, res) => {
 const obtenerVentasProductos = async (req, res) => {
     try {
         const ventas = await VentaProducto.find()
-            .populate('nombreProducto')  // Populate para obtener datos del producto
+            .populate('productos.producto')  // Populate para obtener datos del producto
             .populate('nombreCliente');  // Populate para obtener datos del cliente
 
         res.status(200).json(ventas);
@@ -56,7 +64,7 @@ const obtenerVentaProductoPorId = async (req, res) => {
     try {
         const { id } = req.params;
         const venta = await VentaProducto.findById(id)
-            .populate('nombreProducto')
+            .populate('productos.producto')
             .populate('nombreCliente');
 
         if (!venta) {
@@ -74,7 +82,7 @@ const obtenerVentaProductoPorId = async (req, res) => {
 const actualizarVentaProducto = async (req, res) => {
     try {
         const { id } = req.params;
-        const { nombreProducto, nombreCliente, descripcion, precio, cantidad } = req.body;
+        const { productos, nombreCliente } = req.body;
 
         let venta = await VentaProducto.findById(id);
 
@@ -82,27 +90,31 @@ const actualizarVentaProducto = async (req, res) => {
             return res.status(404).json({ msg: 'Venta de producto no encontrada' });
         }
 
-        // Verificar que el producto y el cliente existan
-        const producto = await Producto.findById(nombreProducto);
+        // Verificar que el cliente exista
         const cliente = await Cliente.findById(nombreCliente);
-
-        if (!producto) {
-            return res.status(400).json({ msg: 'Producto no encontrado' });
-        }
-
         if (!cliente) {
             return res.status(400).json({ msg: 'Cliente no encontrado' });
         }
 
-        // Actualizar campos
-        venta.nombreProducto = nombreProducto || venta.nombreProducto;
-        venta.nombreCliente = nombreCliente || venta.nombreCliente;
-        venta.descripcion = descripcion || venta.descripcion;
-        venta.precio = precio || venta.precio;
-        venta.cantidad = cantidad || venta.cantidad;
+        // Inicializar subtotal
+        let subtotal = 0;
 
-        venta.subtotal = venta.cantidad * venta.precio;
-        venta.total = venta.subtotal; // Actualiza el total también
+        // Verificar que cada producto exista y calcular subtotal
+        for (let item of productos) {
+            const producto = await Producto.findById(item.producto);
+            if (!producto) {
+                return res.status(400).json({ msg: `Producto no encontrado: ${item.producto}` });
+            }
+
+            // Calcular el subtotal para cada producto
+            subtotal += item.cantidad * item.precio; // Asume que el precio es correcto
+        }
+
+        // Actualizar la venta
+        venta.productos = productos;
+        venta.nombreCliente = nombreCliente;
+        venta.subtotal = subtotal;
+        venta.total = subtotal; // Cambia si deseas agregar impuestos o descuentos
 
         await venta.save();
         res.status(200).json(venta);
