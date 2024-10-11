@@ -1,34 +1,24 @@
- // Usa bcryptjs para mantener la consistencia
-const jwt = require('jsonwebtoken');
-const User = require('../modules/usuario'); // Asegúrate de tener un modelo de Usuario
-const Rol = require('../modules/rol'); // Importa el modelo de Rol si lo usas para la validación
-const { createUser } = require('../controllers/userHelper');
 const bcrypt = require('bcryptjs');
-// Controlador para login
+const jwt = require('jsonwebtoken');
+const User = require('../modules/usuario');
+const Rol = require('../modules/rol');
+const { createUser } = require('../controllers/userHelper');
+
 const login = async (req, res) => {
     const { email, password } = req.body;
 
-    console.log('Inicio de sesión - Email:', email); 
+    console.log('Inicio de sesión - Email:', email);
 
     try {
-        // Verificar si el usuario existe
-        const user = await User.findOne({ email });
+        const user = await User.findOne({ email }).populate('rol');
         if (!user) {
             console.log('Usuario no encontrado');
             return res.status(400).json({ message: 'Credenciales inválidas' });
         }
 
-        // Log del usuario encontrado
         console.log('Usuario encontrado:', JSON.stringify(user, null, 2));
 
-        console.log('Longitud de la contraseña ingresada:', password.length); 
-
-        // Verificar si la contraseña es correcta
-        console.log('Contraseña ingresada para el login:', password);
-        console.log('Contraseña almacenada para el usuario:', user.password);
-        console.log('Comparando contraseñas...');
         const isMatch = await bcrypt.compare(password.trim(), user.password);
-
         console.log('Resultado de bcrypt.compare:', isMatch);
         
         if (!isMatch) {
@@ -36,29 +26,34 @@ const login = async (req, res) => {
             return res.status(400).json({ message: 'Credenciales inválidas' });
         }
 
-        // Generar un token
-        const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET || 'secret_key', { expiresIn: '1h' });
+        const token = jwt.sign(
+            { userId: user._id, role: user.rol.nombreRol },
+            process.env.JWT_SECRET || 'secret_key',
+            { expiresIn: '1h' }
+        );
         console.log('Token generado:', token);
-        res.json({ token });
+        
+        res.json({
+            token,
+            role: user.rol.nombreRol,
+            user: {
+                id: user._id,
+                email: user.email,
+                name: user.nombre
+            }
+        });
     } catch (error) {
-        console.error('Error en el login:', error); 
+        console.error('Error en el login:', error);
         res.status(500).json({ message: 'Error en el servidor' });
     }
 };
 
-// Controlador para registro
 const register = async (req, res) => {
     const { nombre, email, password, confirmPassword, rol, estado } = req.body;
 
-    console.log('Registro - Datos recibidos:', {
-        nombre,
-        email,
-        rol,
-        estado,
-    });
+    console.log('Registro - Datos recibidos:', { nombre, email, rol, estado });
 
     try {
-        // Validar campos obligatorios
         if (!nombre || !email || !password || !confirmPassword) {
             console.log('Faltan campos obligatorios');
             return res.status(400).json({
@@ -66,7 +61,6 @@ const register = async (req, res) => {
             });
         }
 
-        // Verificar que la contraseña y la confirmación coincidan
         if (password !== confirmPassword) {
             console.log('Las contraseñas no coinciden');
             return res.status(400).json({
@@ -74,14 +68,12 @@ const register = async (req, res) => {
             });
         }
 
-        // Verificar si el usuario ya existe
         const userExists = await User.findOne({ email });
         if (userExists) {
             console.log('El usuario ya existe:', email);
             return res.status(400).json({ message: 'El usuario ya existe' });
         }
 
-        // Verificar si el rol existe o asignar rol por defecto
         let rolId;
         if (rol) {
             const existeRol = await Rol.findById(rol);
@@ -93,26 +85,34 @@ const register = async (req, res) => {
             }
             rolId = rol;
         } else {
-            // Asignar rol por defecto (ejemplo: 'Cliente')
-            const rolAsignado = rol || (await Rol.findOne({ nombreRol: "Admin" }))._id; 
+            const defaultRol = await Rol.findOne({ nombreRol: "Cliente" });
+            rolId = defaultRol._id;
         }
 
-        // Llamar a la función createUser para crear y guardar el usuario
         const newUser = await createUser({ nombre, email, password, rol: rolId, estado });
         console.log('Usuario guardado en la base de datos:', JSON.stringify(newUser, null, 2));
 
-        // Generar un token
-        const token = jwt.sign({ userId: newUser._id }, process.env.JWT_SECRET || 'secret_key', { expiresIn: '1h' });
+        const token = jwt.sign(
+            { userId: newUser._id, role: newUser.rol.nombreRol },
+            process.env.JWT_SECRET || 'secret_key',
+            { expiresIn: '1h' }
+        );
         console.log('Token generado:', token);
 
-        res.json({ token });
+        res.json({
+            token,
+            role: newUser.rol.nombreRol,
+            user: {
+                id: newUser._id,
+                email: newUser.email,
+                name: newUser.nombre
+            }
+        });
     } catch (error) {
         console.error('Error en el registro:', error);
         res.status(500).json({ message: 'Error en el servidor' });
     }
 };
-
-
 
 module.exports = {
     login,
