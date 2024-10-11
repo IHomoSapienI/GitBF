@@ -4,18 +4,14 @@ const Insumo = require('../modules/insumo');
 const mongoose = require('mongoose');
 
 // Crear una nueva compra
+// Crear una nueva compra
 exports.crearCompra = async (req, res) => {
     try {
-        const { proveedor, recibo, fechaCompra, monto, estado, insumos } = req.body;
+        const { proveedor, recibo, fechaCompra, estado, insumos } = req.body;
 
         // Verificar que los campos requeridos estén presentes
-        if (!proveedor || !recibo || !fechaCompra || monto === undefined || !insumos) {
+        if (!proveedor || !recibo || !fechaCompra || !insumos) {
             return res.status(400).json({ mensaje: 'Faltan campos requeridos' });
-        }
-
-        // Verificar que los insumos existen
-        if (!insumos || insumos.length === 0) {
-            return res.status(400).json({ mensaje: 'No se proporcionaron insumos para la compra' });
         }
 
         // Verificar que el proveedor existe
@@ -24,7 +20,7 @@ exports.crearCompra = async (req, res) => {
             return res.status(400).json({ mensaje: 'Proveedor no encontrado' });
         }
 
-        // Verificar que los insumos existen
+        // Verificar que los insumos existen y obtener precios
         const insumosExistentes = await Insumo.find({ _id: { $in: insumos.map(item => item.insumo) } });
         const insumosFaltantes = insumos.filter(item => 
             !insumosExistentes.some(insumo => insumo._id.equals(item.insumo))
@@ -37,14 +33,18 @@ exports.crearCompra = async (req, res) => {
             });
         }
 
-        const fechaRegistro = new Date(); // Fecha actual para el registro
+        // Calcular el monto total
+        const montoTotal = insumos.reduce((total, item) => {
+            const insumoEncontrado = insumosExistentes.find(insumo => insumo._id.equals(item.insumo));
+            return total + (insumoEncontrado.precio * item.cantidad);
+        }, 0);
 
         const nuevaCompra = new Compra({ 
             proveedor, 
             recibo, 
             fechaCompra, 
-            fechaRegistro,
-            monto, 
+            fechaRegistro: new Date(), // Fecha actual para el registro
+            monto: montoTotal, // Establecer el monto calculado
             estado: estado !== undefined ? estado : true, // Si no se proporciona, se establece como true por defecto
             insumos 
         });
@@ -56,6 +56,7 @@ exports.crearCompra = async (req, res) => {
         return res.status(500).json({ mensaje: 'Error al crear la compra', error: error.message });
     }
 };
+
 
 // Obtener todas las compras
 exports.obtenerCompras = async (req, res) => {
@@ -93,9 +94,10 @@ exports.obtenerCompraPorId = async (req, res) => {
 };
 
 // Actualizar una compra
+// Actualizar una compra
 exports.actualizarCompra = async (req, res) => {
     try {
-        const { proveedor, recibo, fechaCompra, monto, estado, insumos } = req.body;
+        const { proveedor, recibo, fechaCompra, estado, insumos } = req.body;
 
         if (!insumos || insumos.length === 0) {
             return res.status(400).json({ mensaje: 'No se proporcionaron insumos para la compra' });
@@ -110,23 +112,27 @@ exports.actualizarCompra = async (req, res) => {
         }
 
         // Verificar que los insumos existen
-        if (insumos) {
-            const insumosExistentes = await Insumo.find({ _id: { $in: insumos.map(item => item.insumo) } });
-            const insumosFaltantes = insumos.filter(item => 
-                !insumosExistentes.some(insumo => insumo._id.equals(item.insumo))
-            );
+        const insumosExistentes = await Insumo.find({ _id: { $in: insumos.map(item => item.insumo) } });
+        const insumosFaltantes = insumos.filter(item => 
+            !insumosExistentes.some(insumo => insumo._id.equals(item.insumo))
+        );
 
-            if (insumosFaltantes.length > 0) {
-                return res.status(400).json({
-                    mensaje: 'Algunos insumos no fueron encontrados',
-                    insumosFaltantes
-                });
-            }
+        if (insumosFaltantes.length > 0) {
+            return res.status(400).json({
+                mensaje: 'Algunos insumos no fueron encontrados',
+                insumosFaltantes
+            });
         }
+
+        // Calcular el nuevo monto total
+        const montoTotal = insumos.reduce((total, item) => {
+            const insumoEncontrado = insumosExistentes.find(insumo => insumo._id.equals(item.insumo));
+            return total + (insumoEncontrado.precio * item.cantidad);
+        }, 0);
 
         const compraActualizada = await Compra.findByIdAndUpdate(
             req.params.id,
-            { proveedor, recibo, fechaCompra, monto, estado, insumos },
+            { proveedor, recibo, fechaCompra, monto: montoTotal, estado, insumos },
             { new: true, runValidators: true }
         );
 
@@ -139,6 +145,7 @@ exports.actualizarCompra = async (req, res) => {
         return res.status(500).json({ mensaje: 'Error al actualizar la compra', error: error.message });
     }
 };
+
 
 // Eliminar una compra
 exports.eliminarCompra = async (req, res) => {
