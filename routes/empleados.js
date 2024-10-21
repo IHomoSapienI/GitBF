@@ -2,9 +2,10 @@ const { Router } = require('express');
 const { crearEmpleado, obtenerEmpleados, obtenerEmpleadoPorId, actualizarEmpleado, eliminarEmpleado } = require('../controllers/empleado');
 const { validarJWT } = require('../middlewares/verificartoken'); // Asegúrate de que la ruta sea correcta
 const verificarPermisos = require('../middlewares/verificarPermisos'); 
+const router = Router();
 router.use(validarJWT);
 
-const router = Router();
+
 // Ruta para crear un nuevo empleado
 router.post('/', verificarPermisos (['crearEmpleado']),crearEmpleado);
 
