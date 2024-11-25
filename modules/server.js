@@ -39,8 +39,8 @@ class Server {
     middlewares() {
         // CORS
         this.app.use(cors({
-            origin: 'http://localhost:3000',
-           
+            //origin: 'http://localhost:3000',
+           origin: '*'
         }));
 
         this.app.use(bodyParser.json()); // for parsing application/json
