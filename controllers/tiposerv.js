@@ -54,30 +54,24 @@ const tiposerviciosPost = async (req, res = response) => {
     }
 };
 
-// Actualizar un tipo de servicio por ID
 const tiposerviciosPut = async (req, res = response) => {
-    const { id } = req.params; // Extraer el ID de la URL
-    const { nombreTs, activo } = req.body; // Extraer los datos a actualizar desde el cuerpo de la solicitud
-
-    // Validar los datos recibidos
-    if (!nombreTs || activo === undefined) {
-        return res.status(400).json({
-            msg: 'Nombre y estado activo del tiposervicio son obligatorios.'
-        });
-    }
+    const { id } = req.params;
+    const { nombreTs, activo } = req.body;
 
     try {
-        // Buscar el tipo de servicio por ID y actualizarlo
-        const tiposervicio = await Tiposervicio.findByIdAndUpdate(id, { nombreTs, activo }, { new: true });
+        const tiposervicio = await Tiposervicio.findById(id);
 
-        // Verificar si se encontró el tipo de servicio
         if (!tiposervicio) {
             return res.status(404).json({
-                msg: `El tipo de servicio con ID ${id} no fue encontrado.`
+                msg: 'Tipo de servicio no encontrado'
             });
         }
 
-        // Devolver la respuesta con el tipo de servicio actualizado
+        // Actualizamos solo los campos que hayan sido proporcionados
+        if (nombreTs !== undefined) tiposervicio.nombreTs = nombreTs;
+        if (activo !== undefined) tiposervicio.activo = activo;
+
+        await tiposervicio.save();
         res.json({
             msg: 'Tipo de servicio actualizado correctamente',
             tiposervicio
@@ -89,6 +83,8 @@ const tiposerviciosPut = async (req, res = response) => {
         });
     }
 };
+
+
 
 
 module.exports = {

@@ -6,5 +6,5 @@ const {tiposerviciosGet, tiposerviciosPost, tiposerviciosPut} = require('../cont
 
 router.get('/', tiposerviciosGet)
 router.post('/', tiposerviciosPost)
-router.put('/tiposervicios/:id', tiposerviciosPut);
+router.put('/:id', tiposerviciosPut);
 module.exports = router
