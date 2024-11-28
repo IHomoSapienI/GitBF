@@ -85,10 +85,36 @@ const tiposerviciosPut = async (req, res = response) => {
 };
 
 
+// Eliminar un tipo de servicio por ID
+const tiposerviciosDelete = async (req, res = response) => {
+    const { id } = req.params;
+
+    try {
+        // Buscar y eliminar el tipo de servicio
+        const tiposervicio = await Tiposervicio.findByIdAndDelete(id);
+
+        if (!tiposervicio) {
+            return res.status(404).json({
+                msg: 'Tipo de servicio no encontrado'
+            });
+        }
+
+        res.json({
+            msg: 'Tipo de servicio eliminado correctamente',
+            tiposervicio
+        });
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({
+            msg: 'Error al eliminar el tipo de servicio'
+        });
+    }
+};
 
 
 module.exports = {
     tiposerviciosGet,
     tiposerviciosPost,
-    tiposerviciosPut
+    tiposerviciosPut,
+    tiposerviciosDelete
 };
