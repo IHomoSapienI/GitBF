@@ -6,8 +6,10 @@ const {permisosGet, permisosPost, permisosPut, permisosDelete} =require ('../con
 const router = Router();
 router.use(validarJWT);
 
-router.get('/', verificarPermisos (['verPermisos']),permisosGet);
-router.post('/', verificarPermisos (['crearPermiso']),permisosPost);
+//router.get('/', verificarPermisos (['verPermisos']),permisosGet);
+//router.post('/', verificarPermisos (['crearPermiso']),permisosPost);
+router.get('/', permisosGet);
+router.post('/', permisosPost);
 router.put('/:id', permisosPut);
 router.delete('/:id', permisosDelete);
 module.exports = router;
