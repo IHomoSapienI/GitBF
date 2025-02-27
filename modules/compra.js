@@ -1,10 +1,10 @@
-const { Schema, model } = require('mongoose');
+const { Schema, model, Types } = require("mongoose");
 
 // Definición del esquema para compras
 const CompraSchema = Schema({
     proveedor: {
         type: Schema.Types.ObjectId,
-        ref: 'Proveedor',
+        ref: "Proveedor",
         required: true
     },
     recibo: {
@@ -22,16 +22,15 @@ const CompraSchema = Schema({
     monto: {
         type: Number,
         required: true
-      },
+    },
     estado: {
         type: Boolean,
         default: true
     },
-    // Nuevo campo para los insumos comprados
     insumos: [{
         insumo: {
             type: Schema.Types.ObjectId,
-            ref: 'Insumo',
+            ref: "Insumo",
             required: true
         },
         cantidad: {
@@ -43,11 +42,18 @@ const CompraSchema = Schema({
 });
 
 // Middleware para calcular el monto total antes de guardar
-CompraSchema.pre('save', function(next) {
-    this.monto = this.insumos.reduce((total, item) => {
-        return total + (item.cantidad * (item.insumo.precio || 0)); // Asegúrate de que 'insumo' tenga el precio disponible en su esquema
-    }, 0);
-    next();
+CompraSchema.pre("save", async function (next) {
+    try {
+        await this.populate("insumos.insumo"); // Poblar los insumos con sus datos
+
+        this.monto = this.insumos.reduce((total, item) => {
+            return total + (item.cantidad * (item.insumo?.precio || 0));
+        }, 0);
+
+        next();
+    } catch (error) {
+        next(error);
+    }
 });
 
-module.exports = model('Compra', CompraSchema);
+module.exports = model("Compra", CompraSchema);
