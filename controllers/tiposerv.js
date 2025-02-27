@@ -54,67 +54,7 @@ const tiposerviciosPost = async (req, res = response) => {
     }
 };
 
-const tiposerviciosPut = async (req, res = response) => {
-    const { id } = req.params;
-    const { nombreTs, activo } = req.body;
-
-    try {
-        const tiposervicio = await Tiposervicio.findById(id);
-
-        if (!tiposervicio) {
-            return res.status(404).json({
-                msg: 'Tipo de servicio no encontrado'
-            });
-        }
-
-        // Actualizamos solo los campos que hayan sido proporcionados
-        if (nombreTs !== undefined) tiposervicio.nombreTs = nombreTs;
-        if (activo !== undefined) tiposervicio.activo = activo;
-
-        await tiposervicio.save();
-        res.json({
-            msg: 'Tipo de servicio actualizado correctamente',
-            tiposervicio
-        });
-    } catch (error) {
-        console.log(error);
-        res.status(500).json({
-            msg: 'Error al actualizar el tipo de servicio'
-        });
-    }
-};
-
-
-// Eliminar un tipo de servicio por ID
-const tiposerviciosDelete = async (req, res = response) => {
-    const { id } = req.params;
-
-    try {
-        // Buscar y eliminar el tipo de servicio
-        const tiposervicio = await Tiposervicio.findByIdAndDelete(id);
-
-        if (!tiposervicio) {
-            return res.status(404).json({
-                msg: 'Tipo de servicio no encontrado'
-            });
-        }
-
-        res.json({
-            msg: 'Tipo de servicio eliminado correctamente',
-            tiposervicio
-        });
-    } catch (error) {
-        console.log(error);
-        res.status(500).json({
-            msg: 'Error al eliminar el tipo de servicio'
-        });
-    }
-};
-
-
 module.exports = {
     tiposerviciosGet,
-    tiposerviciosPost,
-    tiposerviciosPut,
-    tiposerviciosDelete
+    tiposerviciosPost
 };

@@ -1,6 +1,6 @@
 const { Schema, model } = require('mongoose');
 
-// Definición del esquema para servicios
+// Definición del esquema para insumos
 const InsumoSchema = Schema({
     nombreInsumo: {
         type: String,
