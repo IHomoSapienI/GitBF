@@ -21,13 +21,13 @@ const usuariosGet = async (req, res = response) => {
 };
 
 const usuariosPost = async (req, res = response) => {
-    const { nombre, email, password, confirmPassword } = req.body;
+    const { nombre, apellido, email, celular, password, confirmPassword } = req.body;
 
     try {
         // Validar campos obligatorios
-        if (!nombre || !email || !password || !confirmPassword) {
+        if (!nombre || !apellido || !email || !celular || !password || !confirmPassword) {
             return res.status(400).json({
-                msg: 'Faltan campos obligatorios (nombre, email, password, confirmPassword)'
+                msg: 'Faltan campos obligatorios (nombre, apellido, email, celular, password, confirmPassword)'
             });
         }
 
@@ -43,6 +43,14 @@ const usuariosPost = async (req, res = response) => {
         if (existeEmail) {
             return res.status(400).json({
                 msg: 'El correo ya está en uso'
+            });
+        }
+
+        // Verificar si el celular ya existe
+        const existeCelular = await Usuario.findOne({ celular });
+        if (existeCelular) {
+            return res.status(400).json({
+                msg: 'El celular ya está en uso'
             });
         }
 
@@ -70,10 +78,12 @@ const usuariosPost = async (req, res = response) => {
         // Crear nuevo usuario
         const nuevoUsuario = new Usuario({
             nombre,
+            apellido,
             email,
+            celular,
             password: passwordEncriptada,
-            rol: rol._id, // Asignar el rol encontrado
-            estado: true // Puedes ajustar este valor según tu lógica
+            rol: rol._id,
+            estado: true
         });
 
         // Guardar usuario en la base de datos
@@ -100,7 +110,7 @@ const usuariosPost = async (req, res = response) => {
 // Actualizar un usuario existente
 const usuariosPut = async (req, res = response) => {
     const { id } = req.params;
-    const { email, nombre, rol } = req.body;
+    const { email, nombre, apellido, celular, rol } = req.body;
 
     try {
         // Verificar si el rol existe
@@ -112,7 +122,11 @@ const usuariosPut = async (req, res = response) => {
         }
 
         // Actualizar el usuario
-        const usuario = await Usuario.findByIdAndUpdate(id, { nombre, rol }, { new: true }).select('-password');
+        const usuario = await Usuario.findByIdAndUpdate(
+            id,
+            { nombre, apellido, celular, rol },
+            { new: true }
+        ).select('-password');
 
         if (!usuario) {
             return res.status(404).json({

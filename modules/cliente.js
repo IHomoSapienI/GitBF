@@ -1,22 +1,23 @@
 const { Schema, model } = require('mongoose');
 
 const ClienteSchema = Schema({
-    documentocliente: {
-        type: String,
-        required: true,
-        unique: true // Asegura que no haya duplicados de documento de cliente
-    },
     nombrecliente: {
         type: String,
         required: true
     },
-    direccioncliente: {
+    apellidocliente: {  // Nuevo campo agregado
         type: String,
         required: true
     },
+    correocliente: {  // Nuevo campo agregado
+        type: String,
+        required: true,
+        unique: true // Asegura que no haya duplicados de correo de cliente
+    },
     celularcliente: {
         type: String,
-        required: true
+        required: true,
+        unique: true
     },
     estadocliente: {
         type: String,
