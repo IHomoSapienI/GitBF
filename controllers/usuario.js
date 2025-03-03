@@ -113,7 +113,7 @@ const usuariosPost = async (req, res = response) => {
                 apellidoempleado: apellido,
                 correoempleado: email,
                 telefonoempleado: celular,
-                estadoempleado: 'Activo'
+                estadoempleado: true
             });
 
             await nuevoEmpleado.save();
@@ -148,6 +148,17 @@ const usuariosPut = async (req, res = response) => {
             });
         }
 
+        // Obtener el usuario actual antes de actualizarlo
+        const usuarioActual = await Usuario.findById(id);
+        if (!usuarioActual) {
+            return res.status(404).json({
+                msg: 'Usuario no encontrado'
+            });
+        }
+
+        // Verificar si el rol del usuario está cambiando
+        const rolCambiado = usuarioActual.rol.toString() !== rol;
+
         // Actualizar el usuario
         const usuario = await Usuario.findByIdAndUpdate(
             id,
@@ -159,6 +170,65 @@ const usuariosPut = async (req, res = response) => {
             return res.status(404).json({
                 msg: 'Usuario no encontrado'
             });
+        }
+
+        // Si el rol cambió, manejar la creación o eliminación en las tablas de Cliente o Empleado
+        if (rolCambiado) {
+            const rolNuevo = await Rol.findById(rol);
+
+            // Si el nuevo rol es "Cliente"
+            if (rolNuevo.nombreRol === 'Cliente') {
+                // Verificar si ya existe un cliente con este correo
+                const clienteExistente = await Cliente.findOne({ correocliente: usuario.email });
+
+                if (!clienteExistente) {
+                    // Crear un nuevo cliente
+                    const nuevoCliente = new Cliente({
+                        nombrecliente: usuario.nombre,
+                        apellidocliente: usuario.apellido,
+                        correocliente: usuario.email,
+                        celularcliente: usuario.celular,
+                        estadocliente: true
+                    });
+
+                    await nuevoCliente.save();
+                }
+
+                // Si el usuario tenía un rol de "Empleado", eliminar el registro de empleado
+                if (usuarioActual.rol.nombreRol === 'Empleado') {
+                    await Empleado.findOneAndDelete({ correoempleado: usuario.email });
+                }
+            }
+
+            // Si el nuevo rol es "Empleado"
+            else if (rolNuevo.nombreRol === 'Empleado') {
+                // Verificar si ya existe un empleado con este correo
+                const empleadoExistente = await Empleado.findOne({ correoempleado: usuario.email });
+
+                if (!empleadoExistente) {
+                    // Crear un nuevo empleado
+                    const nuevoEmpleado = new Empleado({
+                        nombreempleado: usuario.nombre,
+                        apellidoempleado: usuario.apellido,
+                        correoempleado: usuario.email,
+                        telefonoempleado: usuario.celular,
+                        estadoempleado: true
+                    });
+
+                    await nuevoEmpleado.save();
+                }
+
+                // Si el usuario tenía un rol de "Cliente", eliminar el registro de cliente
+                if (usuarioActual.rol.nombreRol === 'Cliente') {
+                    await Cliente.findOneAndDelete({ correocliente: usuario.email });
+                }
+            }
+
+            // Si el nuevo rol no es ni "Cliente" ni "Empleado", eliminar registros de cliente o empleado
+            else {
+                await Cliente.findOneAndDelete({ correocliente: usuario.email });
+                await Empleado.findOneAndDelete({ correoempleado: usuario.email });
+            }
         }
 
         res.json({
