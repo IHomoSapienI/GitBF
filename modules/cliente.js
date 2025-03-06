@@ -20,9 +20,9 @@ const ClienteSchema = Schema({
         unique: true
     },
     estadocliente: {
-        type: String,
-        enum: ['Activo', 'Inactivo'], // Limita a estos dos valores
-        default: 'Activo'
+        type: Boolean,
+        default: true,
+        required: [true, 'El estado es obligatorio']
     }
 });
 

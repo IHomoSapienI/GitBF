@@ -19,9 +19,9 @@ const EmpleadoSchema = Schema({
         required: true
     },
     estadoempleado: {
-        type: String,
-        enum: ['Activo', 'Inactivo'], // Limita a estos dos valores
-        default: 'Activo'
+        type: Boolean,
+        default: true,
+        required: [true, 'El estado es obligatorio']
     }
 });
 
