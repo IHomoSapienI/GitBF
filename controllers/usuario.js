@@ -5,7 +5,7 @@ const Cliente = require("../modules/cliente")
 const Empleado = require("../modules/empleado")
 const bcrypt = require("bcryptjs")
 const jwt = require("jsonwebtoken")
-const { createUser } = require("./userHelper") // Usar tu helper existente
+const { createUser } = require("./userHelper")
 
 // Obtener todos los usuarios (sin mostrar contraseñas)
 const usuariosGet = async (req, res = response) => {
@@ -26,7 +26,10 @@ const usuariosGet = async (req, res = response) => {
 
 // Crear un nuevo usuario
 const usuariosPost = async (req, res = response) => {
-  const { nombre, apellido, correo, email, celular, password, confirmPassword, rol, tipoUsuario } = req.body
+  console.log("usuariosPost - Datos recibidos:", JSON.stringify(req.body, null, 2))
+
+  const { nombre, apellido, correo, email, celular, password, confirmPassword, rol, tipoUsuario, estadocliente } =
+    req.body
 
   try {
     // Usar correo o email según lo que venga en la petición
@@ -65,7 +68,7 @@ const usuariosPost = async (req, res = response) => {
       rolAsignado = await Rol.findById(rol)
       if (!rolAsignado) {
         return res.status(400).json({
-          msg: "El rol especificado no existe",
+          msg: `El rol con ID ${rol} no existe`,
         })
       }
     } else if (tipoUsuario) {
@@ -100,6 +103,8 @@ const usuariosPost = async (req, res = response) => {
       }
     }
 
+    console.log("Rol asignado:", JSON.stringify(rolAsignado, null, 2))
+
     // Usar el helper existente para crear el usuario
     const userData = {
       nombre,
@@ -114,6 +119,7 @@ const usuariosPost = async (req, res = response) => {
 
     // Crear el usuario usando el helper existente
     const nuevoUsuario = await createUser(userData)
+    console.log("Usuario creado:", JSON.stringify(nuevoUsuario, null, 2))
 
     // Verificar el rol y crear el cliente o empleado correspondiente
     if (rolAsignado.nombreRol === "Cliente") {
@@ -129,11 +135,12 @@ const usuariosPost = async (req, res = response) => {
           apellidocliente: apellido || "",
           correocliente: emailUsuario,
           celularcliente: celular || "",
-          estadocliente: true,
+          estadocliente: estadocliente === "Activo" || estadocliente === true ? true : false,
           usuario: nuevoUsuario._id, // Vincular con el usuario
         })
 
         await nuevoCliente.save()
+        console.log("Cliente creado:", JSON.stringify(nuevoCliente, null, 2))
       }
 
       // Asegurar que no exista como empleado
@@ -158,6 +165,7 @@ const usuariosPost = async (req, res = response) => {
         })
 
         await nuevoEmpleado.save()
+        console.log("Empleado creado:", JSON.stringify(nuevoEmpleado, null, 2))
       }
 
       // Asegurar que no exista como cliente
@@ -174,7 +182,7 @@ const usuariosPost = async (req, res = response) => {
     )
 
     // Eliminar el campo de la contraseña de la respuesta
-    const usuarioResponse = nuevoUsuario.toObject ? nuevoUsuario.toObject() : nuevoUsuario
+    const usuarioResponse = nuevoUsuario.toObject ? nuevoUsuario.toObject() : { ...nuevoUsuario }
     delete usuarioResponse.password
 
     res.status(201).json({
