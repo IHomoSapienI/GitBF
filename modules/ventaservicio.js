@@ -2,6 +2,10 @@ const { Schema, model } = require("mongoose")
 
 const VentaServicioSchema = Schema(
   {
+    codigoVenta: {
+      type: String,
+      unique: true,
+    },
     cliente: {
       type: Schema.Types.ObjectId,
       ref: "Cliente",

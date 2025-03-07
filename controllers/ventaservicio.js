@@ -1,9 +1,23 @@
 const { response } = require("express")
 const Ventaservicio = require("../modules/ventaservicio")
+const Contador = require("../modules/contador")
 const Cita = require("../modules/cita")
 const Cliente = require("../modules/cliente")
 const Servicio = require("../modules/servicio")
 const Empleado = require("../modules/empleado")
+
+// Función para obtener el siguiente código de venta
+const obtenerSiguienteCodigoVenta = async () => {
+  const contador = await Contador.findOneAndUpdate(
+    { nombre: "ventaservicio" },
+    { $inc: { secuencia: 1 } },
+    { new: true, upsert: true },
+  )
+
+  // Formatear el número con ceros a la izquierda (ej: V0001)
+  const codigoFormateado = `V${contador.secuencia.toString().padStart(4, "0")}`
+  return codigoFormateado
+}
 
 // Obtener todas las ventas de servicios
 const ventaserviciosGet = async (req, res = response) => {
@@ -114,7 +128,11 @@ const ventaserviciosPost = async (req, res = response) => {
       tiempo: servicio.tiempo,
     }))
 
+    // Obtener el siguiente código de venta
+    const codigoVenta = await obtenerSiguienteCodigoVenta()
+
     const ventaservicio = new Ventaservicio({
+      codigoVenta,
       cita,
       cliente,
       empleado,
@@ -133,6 +151,7 @@ const ventaserviciosPost = async (req, res = response) => {
     console.error("Error al crear la venta de servicio:", error)
     res.status(500).json({
       msg: "Error al crear la venta de servicio",
+      error: error.message,
     })
   }
 }
