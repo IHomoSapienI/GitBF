@@ -160,6 +160,7 @@ const usuariosPost = async (req, res = response) => {
           apellidoempleado: apellido || "",
           correoempleado: emailUsuario,
           celularempleado: celular || "",
+          telefonoempleado: celular || "", // Añadir el campo telefonoempleado
           estadoempleado: true,
           usuario: nuevoUsuario._id, // Vincular con el usuario
         })
