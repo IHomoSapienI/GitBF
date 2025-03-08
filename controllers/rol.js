@@ -2,6 +2,7 @@ const { response } = require("express")
 const mongoose = require("mongoose")
 const Rol = require("../modules/rol") // Importar el modelo de Rol
 const Permiso = require("../modules/permiso") // Importar el modelo de Permiso
+const ExcelJS = require("exceljs") // Importar ExcelJS para generar archivos Excel
 
 // Método GET para obtener los roles
 const rolesGet = async (req, res = response) => {
@@ -171,11 +172,75 @@ const rolesDelete = async (req, res = response) => {
   })
 }
 
+// Método para exportar roles a Excel
+const rolesExportExcel = async (req, res = response) => {
+  try {
+    // Obtener todos los roles con sus permisos
+    const roles = await Rol.find().populate("permisoRol")
+
+    if (roles.length === 0) {
+      return res.status(404).json({
+        msg: "No se encontraron roles para exportar",
+      })
+    }
+
+    // Crear un nuevo libro de Excel
+    const workbook = new ExcelJS.Workbook()
+    const worksheet = workbook.addWorksheet("Roles")
+
+    // Definir las columnas
+    worksheet.columns = [
+      { header: "ID", key: "id", width: 30 },
+      { header: "Nombre del Rol", key: "nombreRol", width: 30 },
+      { header: "Estado", key: "estadoRol", width: 15 },
+      { header: "Es Admin", key: "esAdmin", width: 15 },
+      { header: "Permisos", key: "permisos", width: 50 },
+    ]
+
+    // Estilo para el encabezado
+    worksheet.getRow(1).font = { bold: true }
+    worksheet.getRow(1).fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "FFD3D3D3" },
+    }
+
+    // Agregar los datos
+    roles.forEach((rol) => {
+      // Obtener los nombres de los permisos
+      const permisosNombres = rol.permisoRol.map((permiso) => permiso.nombrePermiso || "Permiso sin nombre").join(", ")
+
+      worksheet.addRow({
+        id: rol._id.toString(),
+        nombreRol: rol.nombreRol,
+        estadoRol: rol.estadoRol ? "Activo" : "Inactivo",
+        esAdmin: rol.esAdmin ? "Sí" : "No",
+        permisos: permisosNombres,
+      })
+    })
+
+    // Configurar la respuesta
+    res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+    res.setHeader("Content-Disposition", "attachment; filename=roles.xlsx")
+
+    // Escribir el libro de Excel en la respuesta
+    await workbook.xlsx.write(res)
+    res.end()
+  } catch (error) {
+    console.error("Error al exportar roles a Excel:", error)
+    res.status(500).json({
+      msg: "Error al exportar roles a Excel",
+      error: error.message,
+    })
+  }
+}
+
 module.exports = {
   rolesGet,
   rolesPost,
   rolesPut,
   rolesDelete,
   rolesToggleEstado,
+  rolesExportExcel,
 }
 
