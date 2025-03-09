@@ -12,7 +12,9 @@ const verificarPermisos = (permisosRequeridos) => {
   return async (req, res = response, next) => {
     try {
       // Obtener el ID del usuario desde el request (establecido por el middleware validarJWT)
-      const usuarioId = req.usuario.id
+      const usuarioId = req.userId // Cambiado de req.usuario.id a req.userId para coincidir con verificartoken.js
+
+      console.log(`ID de usuario en verificarPermisos: ${usuarioId}`)
 
       if (!usuarioId) {
         return res.status(401).json({
@@ -53,12 +55,19 @@ const verificarPermisos = (permisosRequeridos) => {
       // Verificar si el usuario tiene los permisos necesarios
       const permisosUsuario = rol.permisoRol.map((permiso) => permiso.nombrePermiso)
 
+      console.log(`Permisos del usuario: ${permisosUsuario.join(", ")}`)
+      console.log(`Permisos requeridos: ${permisosRequeridos.join(", ")}`)
+
       // Verificar que los permisos requeridos existan y estén activos
       const tienePermisos = await Promise.all(
         permisosRequeridos.map(async (permisoRequerido) => {
           const permiso = await Permiso.findOne({ nombrePermiso: permisoRequerido })
           // Verificar que el permiso exista Y esté activo
-          return permiso && permiso.activo && permisosUsuario.includes(permisoRequerido)
+          const tienePermiso = permiso && permiso.activo && permisosUsuario.includes(permisoRequerido)
+          console.log(
+            `Permiso ${permisoRequerido}: existe=${!!permiso}, activo=${permiso?.activo}, usuario lo tiene=${permisosUsuario.includes(permisoRequerido)}`,
+          )
+          return tienePermiso
         }),
       )
 
