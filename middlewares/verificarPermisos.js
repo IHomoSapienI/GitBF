@@ -49,6 +49,7 @@ const verificarPermisos = (permisosRequeridos) => {
       if (!rol.estadoRol) {
         return res.status(403).json({
           msg: "El rol del usuario está desactivado",
+          rolDesactivado: true, // Añadir flag para el interceptor de axios
         })
       }
 
@@ -58,23 +59,35 @@ const verificarPermisos = (permisosRequeridos) => {
       console.log(`Permisos del usuario: ${permisosUsuario.join(", ")}`)
       console.log(`Permisos requeridos: ${permisosRequeridos.join(", ")}`)
 
-      // Verificar que los permisos requeridos existan y estén activos
-      const tienePermisos = await Promise.all(
-        permisosRequeridos.map(async (permisoRequerido) => {
-          const permiso = await Permiso.findOne({ nombrePermiso: permisoRequerido })
-          // Verificar que el permiso exista Y esté activo
-          const tienePermiso = permiso && permiso.activo && permisosUsuario.includes(permisoRequerido)
-          console.log(
-            `Permiso ${permisoRequerido}: existe=${!!permiso}, activo=${permiso?.activo}, usuario lo tiene=${permisosUsuario.includes(permisoRequerido)}`,
-          )
-          return tienePermiso
-        }),
-      )
+      // Verificar cada permiso requerido individualmente para dar mensajes más específicos
+      for (const permisoRequerido of permisosRequeridos) {
+        // Buscar el permiso en la base de datos
+        const permiso = await Permiso.findOne({ nombrePermiso: permisoRequerido })
 
-      if (!tienePermisos.every(Boolean)) {
-        return res.status(403).json({
-          msg: "No tienes permiso para acceder a esta ruta o alguno de los permisos requeridos está desactivado",
-        })
+        // Si el permiso no existe en la base de datos
+        if (!permiso) {
+          return res.status(403).json({
+            msg: `El permiso "${permisoRequerido}" no existe en el sistema`,
+            permisoInexistente: true,
+          })
+        }
+
+        // Si el permiso existe pero está desactivado
+        if (!permiso.activo) {
+          return res.status(403).json({
+            msg: `El permiso "${permisoRequerido}" está desactivado`,
+            permisoDesactivado: true, // Añadir flag para el interceptor de axios
+            nombrePermiso: permisoRequerido,
+          })
+        }
+
+        // Si el permiso existe y está activo, pero el usuario no lo tiene
+        if (!permisosUsuario.includes(permisoRequerido)) {
+          return res.status(403).json({
+            msg: `No tienes el permiso "${permisoRequerido}" necesario para esta acción`,
+            permisoNoAsignado: true,
+          })
+        }
       }
 
       // Si todo está bien, continuar con la ejecución
@@ -83,6 +96,7 @@ const verificarPermisos = (permisosRequeridos) => {
       console.error("Error en verificarPermisos:", error)
       res.status(500).json({
         msg: "Error al verificar permisos",
+        error: error.message,
       })
     }
   }
