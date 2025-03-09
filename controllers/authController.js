@@ -1,3 +1,4 @@
+// controllers/authController.js
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../modules/usuario');
@@ -24,6 +25,15 @@ const login = async (req, res) => {
         if (!isMatch) {
             console.log('Contraseña incorrecta');
             return res.status(400).json({ message: 'Credenciales inválidas' });
+        }
+
+        // Verificar si el rol está activo
+        if (!user.rol.estadoRol) {
+            console.log('Rol desactivado:', user.rol.nombreRol);
+            return res.status(403).json({ 
+                message: 'Tu rol ha sido desactivado. Contacta al administrador.',
+                rolDesactivado: true
+            });
         }
 
         const token = jwt.sign(
@@ -83,9 +93,29 @@ const register = async (req, res) => {
                     msg: 'El rol especificado no es válido',
                 });
             }
+            
+            // Verificar si el rol está activo
+            if (!existeRol.estadoRol) {
+                console.log('Rol desactivado:', existeRol.nombreRol);
+                return res.status(403).json({
+                    msg: 'El rol seleccionado está desactivado. Por favor, selecciona otro rol.',
+                    rolDesactivado: true
+                });
+            }
+            
             rolId = rol;
         } else {
             const defaultRol = await Rol.findOne({ nombreRol: "Cliente" });
+            
+            // Verificar si el rol por defecto está activo
+            if (!defaultRol.estadoRol) {
+                console.log('Rol por defecto desactivado:', defaultRol.nombreRol);
+                return res.status(403).json({
+                    msg: 'El rol por defecto está desactivado. Por favor, contacta al administrador.',
+                    rolDesactivado: true
+                });
+            }
+            
             rolId = defaultRol._id;
         }
 

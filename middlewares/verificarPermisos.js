@@ -1,22 +1,32 @@
+// middlewares/verificarPermisos.js
 const Permiso = require('../modules/permiso');
-const Usuario = require('../modules/usuario'); // Importa el modelo de usuario
+const Usuario = require('../modules/usuario');
+const Rol = require('../modules/rol'); // Asegúrate de importar el modelo de Rol
 
 const verificarPermisos = (permisosRequeridos) => {
   return async (req, res, next) => {
     try {
-      const userId = req.userId; // Cambié 'uid' a 'userId' para mantener la consistencia
+      const userId = req.userId;
       console.log(`User ID del usuario: ${userId}`);
 
       // Busca al usuario y su rol
       const usuario = await Usuario.findById(userId).populate('rol');
-      console.log(`Usuario encontrado: ${usuario}`);
+      console.log(`Usuario encontrado: ${usuario ? usuario.nombre : 'No encontrado'}`);
 
       if (!usuario || !usuario.rol) {
         return res.status(403).json({ msg: 'Usuario o rol no encontrado' });
       }
 
+      // Verificar si el rol está activo
+      if (!usuario.rol.estadoRol) {
+        return res.status(403).json({ 
+          msg: 'Tu rol ha sido desactivado. Contacta al administrador.',
+          rolDesactivado: true
+        });
+      }
+
       // Obtiene los permisos del rol del usuario
-      const permisosUsuario = usuario.rol.permisoRol; // IDs de permisos del rol
+      const permisosUsuario = usuario.rol.permisoRol;
       console.log(`Permisos del usuario: ${permisosUsuario}`);
 
       const permisosValidos = await Permiso.find({ _id: { $in: permisosUsuario } });
@@ -39,4 +49,4 @@ const verificarPermisos = (permisosRequeridos) => {
   };
 };
 
-module.exports = verificarPermisos; // Asegúrate de que la exportación sea correcta
+module.exports = verificarPermisos;

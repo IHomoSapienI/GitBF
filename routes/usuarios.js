@@ -1,9 +1,13 @@
 const { Router } = require('express');
 //const { validarJWT } = require('../middlewares/verificartoken'); // Importar el middleware
 //const verificarPermisos = require('../middlewares/verificarPermisos'); // Asegúrate de que la ruta sea correcta
+const verificarRolActivo = require('../middlewares/verificarRolActivo');
 const {usuariosGet, usuariosPost, usuariosPut, usuariosDelete } = require('../controllers/usuario');
 
+
+
 const router = Router();
+router.use(verificarRolActivo);
 //router.use(validarJWT);
 // // Ruta pública para registrar un usuario
 // router.post('/', verificarPermisos (['crearUsuarios']), usuariosPost);
