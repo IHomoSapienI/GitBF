@@ -15,12 +15,18 @@ const verificarRolActivo = require("../middlewares/verificarRolActivo")
 router.use(validarJWT)
 router.use(verificarRolActivo)
 
-// Rutas para permisos con permisos específicos
-router.get("/", verificarPermisos(["verPermisos"]), permisosGet)
-router.post("/", verificarPermisos(["crearPermiso"]), permisosPost)
-router.put("/:id", verificarPermisos(["actualizarPermiso"]), permisosPut)
-router.delete("/:id", verificarPermisos(["eliminarPermiso"]), permisosDelete)
-router.get("/export-excel", verificarPermisos(["verPermisos"]), permisosExportExcel)
+// // Rutas para permisos con permisos específicos
+// router.get("/", verificarPermisos(["verPermisos"]), permisosGet)
+// router.post("/", verificarPermisos(["crearPermiso"]), permisosPost)
+// router.put("/:id", verificarPermisos(["actualizarPermiso"]), permisosPut)
+// router.delete("/:id", verificarPermisos(["eliminarPermiso"]), permisosDelete)
+// router.get("/export-excel", verificarPermisos(["verPermisos"]), permisosExportExcel)
 
+// Rutas para permisos con permisos específicos
+router.get("/", permisosGet)
+router.post("/", permisosPost)
+router.put("/:id", permisosPut)
+router.delete("/:id", permisosDelete)
+router.get("/export-excel", permisosExportExcel)
 module.exports = router
 
