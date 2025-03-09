@@ -79,7 +79,7 @@ const cambiarEstadoInsumo = async (req, res) => {
     }
 };
 
-// Dar de baja un insumo
+// Dar de baja un insumo y descontar del stock
 const darDeBajaInsumo = async (req, res) => {
     try {
         const { insumoId, fechaBaja, cantidad, observaciones } = req.body;
@@ -87,6 +87,10 @@ const darDeBajaInsumo = async (req, res) => {
         const insumo = await Insumo.findById(insumoId);
         if (!insumo) {
             return res.status(404).json({ message: 'Insumo no encontrado' });
+        }
+
+        if (insumo.stock < cantidad) {
+            return res.status(400).json({ message: 'Stock insuficiente para dar de baja' });
         }
 
         const baja = new BajaProducto({
@@ -99,10 +103,13 @@ const darDeBajaInsumo = async (req, res) => {
 
         await baja.save();
 
-        insumo.estado = false;
+        insumo.stock -= cantidad;
+        if (insumo.stock === 0) {
+            insumo.estado = false;
+        }
         await insumo.save();
 
-        res.json({ message: 'Insumo dado de baja correctamente', baja });
+        res.json({ message: 'Insumo dado de baja correctamente', baja, stockActual: insumo.stock });
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Error al dar de baja el insumo', error });

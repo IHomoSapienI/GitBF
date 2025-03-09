@@ -1,17 +1,7 @@
 const BajaProducto = require('../modules/bajaproducto');
 const Insumo = require('../modules/insumo');
 
-// Obtener todas las bajas de productos
-const obtenerBajasProductos = async (req, res) => {
-    try {
-        const bajas = await BajaProducto.find().populate('productoId');
-        res.json(bajas);
-    } catch (error) {
-        res.status(500).json({ message: 'Error al obtener las bajas de productos', error });
-    }
-};
-
-// Crear una nueva baja de producto
+// Crear una nueva baja de producto y descontar del stock
 const crearBajaProducto = async (req, res) => {
     const { productoId, fechaBaja, cantidad, observaciones } = req.body;
 
@@ -37,7 +27,7 @@ const crearBajaProducto = async (req, res) => {
 
         await nuevaBaja.save();
 
-        // Restar cantidad del stock del insumo
+        // Restar la cantidad del stock del insumo
         insumo.stock -= cantidad;
 
         // Si el stock es 0, cambiar su estado a inactivo
@@ -47,7 +37,7 @@ const crearBajaProducto = async (req, res) => {
 
         await insumo.save();
 
-        res.status(201).json({ message: 'Baja de producto creada con éxito', baja: nuevaBaja });
+        res.status(201).json({ message: 'Baja de producto creada y stock actualizado', baja: nuevaBaja, stockActual: insumo.stock });
     } catch (error) {
         res.status(500).json({ message: 'Error al crear la baja de producto', error });
     }
@@ -79,7 +69,6 @@ const eliminarBajaProducto = async (req, res) => {
 };
 
 module.exports = {
-    obtenerBajasProductos,
     crearBajaProducto,
     eliminarBajaProducto
 };
