@@ -596,24 +596,30 @@ const usuariosToggleEstado = async (req, res = response) => {
       })
     }
 
-    // Cambiar el estado
-    usuario.estado = !usuario.estado
-    await usuario.save()
+    // Cambiar el estado sin modificar otros campos
+    const nuevoEstado = !usuario.estado
+
+    // Actualizar solo el campo estado
+    await Usuario.findByIdAndUpdate(id, { estado: nuevoEstado })
+
+    // Obtener el rol para actualizar las colecciones relacionadas
+    const rol = await Rol.findById(usuario.rol)
 
     // Si el usuario es un cliente o empleado, actualizar también su estado en esas colecciones
-    if (usuario.rol) {
-      const rol = await Rol.findById(usuario.rol)
-
-      if (rol && rol.nombreRol === "Cliente") {
-        await Cliente.findOneAndUpdate({ usuario: id }, { estadocliente: usuario.estado })
-      } else if (rol && rol.nombreRol === "Empleado") {
-        await Empleado.findOneAndUpdate({ usuario: id }, { estadoempleado: usuario.estado })
+    if (rol) {
+      if (rol.nombreRol === "Cliente") {
+        await Cliente.findOneAndUpdate({ usuario: id }, { estadocliente: nuevoEstado })
+      } else if (rol.nombreRol === "Empleado") {
+        await Empleado.findOneAndUpdate({ usuario: id }, { estadoempleado: nuevoEstado })
       }
     }
 
+    // Obtener el usuario actualizado para la respuesta
+    const usuarioActualizado = await Usuario.findById(id).select("-password")
+
     res.json({
-      msg: `Usuario ${usuario.estado ? "activado" : "desactivado"} correctamente`,
-      usuario,
+      msg: `Usuario ${nuevoEstado ? "activado" : "desactivado"} correctamente`,
+      usuario: usuarioActualizado,
     })
   } catch (error) {
     console.error("Error al cambiar estado del usuario:", error)
