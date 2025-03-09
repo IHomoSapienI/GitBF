@@ -1,52 +1,83 @@
-// middlewares/verificarPermisos.js
-const Permiso = require('../modules/permiso');
-const Usuario = require('../modules/usuario');
-const Rol = require('../modules/rol'); // Asegúrate de importar el modelo de Rol
+const { response } = require("express")
+const Permiso = require("../modules/permiso")
+const Rol = require("../modules/rol")
+const Usuario = require("../modules/usuario")
 
+/**
+ * Middleware para verificar si el usuario tiene los permisos necesarios
+ * @param {Array} permisosRequeridos - Array de strings con los nombres de los permisos requeridos
+ * @returns {Function} Middleware
+ */
 const verificarPermisos = (permisosRequeridos) => {
-  return async (req, res, next) => {
+  return async (req, res = response, next) => {
     try {
-      const userId = req.userId;
-      console.log(`User ID del usuario: ${userId}`);
+      // Obtener el ID del usuario desde el request (establecido por el middleware validarJWT)
+      const usuarioId = req.usuario.id
 
-      // Busca al usuario y su rol
-      const usuario = await Usuario.findById(userId).populate('rol');
-      console.log(`Usuario encontrado: ${usuario ? usuario.nombre : 'No encontrado'}`);
+      if (!usuarioId) {
+        return res.status(401).json({
+          msg: "Token no válido - usuario no existe en la petición",
+        })
+      }
 
-      if (!usuario || !usuario.rol) {
-        return res.status(403).json({ msg: 'Usuario o rol no encontrado' });
+      // Buscar el usuario en la base de datos
+      const usuario = await Usuario.findById(usuarioId)
+      if (!usuario) {
+        return res.status(401).json({
+          msg: "Token no válido - usuario no existe en DB",
+        })
+      }
+
+      // Verificar si el usuario está activo
+      if (!usuario.estado) {
+        return res.status(401).json({
+          msg: "Token no válido - usuario con estado: false",
+        })
+      }
+
+      // Obtener el rol del usuario
+      const rol = await Rol.findById(usuario.rol).populate("permisoRol")
+      if (!rol) {
+        return res.status(403).json({
+          msg: "El usuario no tiene un rol asignado",
+        })
       }
 
       // Verificar si el rol está activo
-      if (!usuario.rol.estadoRol) {
-        return res.status(403).json({ 
-          msg: 'Tu rol ha sido desactivado. Contacta al administrador.',
-          rolDesactivado: true
-        });
+      if (!rol.estadoRol) {
+        return res.status(403).json({
+          msg: "El rol del usuario está desactivado",
+        })
       }
 
-      // Obtiene los permisos del rol del usuario
-      const permisosUsuario = usuario.rol.permisoRol;
-      console.log(`Permisos del usuario: ${permisosUsuario}`);
+      // Verificar si el usuario tiene los permisos necesarios
+      const permisosUsuario = rol.permisoRol.map((permiso) => permiso.nombrePermiso)
 
-      const permisosValidos = await Permiso.find({ _id: { $in: permisosUsuario } });
-      const permisosValidosNombres = permisosValidos.map(p => p.nombrePermiso);
-      console.log(`Permisos válidos: ${permisosValidosNombres}`);
+      // Verificar que los permisos requeridos existan y estén activos
+      const tienePermisos = await Promise.all(
+        permisosRequeridos.map(async (permisoRequerido) => {
+          const permiso = await Permiso.findOne({ nombrePermiso: permisoRequerido })
+          // Verificar que el permiso exista Y esté activo
+          return permiso && permiso.activo && permisosUsuario.includes(permisoRequerido)
+        }),
+      )
 
-      // Verifica si el usuario tiene los permisos requeridos
-      const tienePermisos = permisosRequeridos.every(permiso => permisosValidosNombres.includes(permiso));
-      console.log(`¿Usuario tiene permisos? ${tienePermisos}`);
-
-      if (!tienePermisos) {
-        return res.status(403).json({ msg: 'No tienes permiso para acceder a esta ruta' });
+      if (!tienePermisos.every(Boolean)) {
+        return res.status(403).json({
+          msg: "No tienes permiso para acceder a esta ruta o alguno de los permisos requeridos está desactivado",
+        })
       }
 
-      next(); // Permitir el acceso si tiene permisos
+      // Si todo está bien, continuar con la ejecución
+      next()
     } catch (error) {
-      console.error(error);
-      return res.status(500).json({ msg: 'Error al verificar permisos' });
+      console.error("Error en verificarPermisos:", error)
+      res.status(500).json({
+        msg: "Error al verificar permisos",
+      })
     }
-  };
-};
+  }
+}
 
-module.exports = verificarPermisos;
+module.exports = verificarPermisos
+
