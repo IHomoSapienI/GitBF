@@ -582,6 +582,48 @@ const activateAccount = async (req, res = response) => {
   }
 }
 
+// Añadir esta nueva función al final del archivo, antes del module.exports
+// Activar/Desactivar un usuario
+const usuariosToggleEstado = async (req, res = response) => {
+  const { id } = req.params
+
+  try {
+    // Verificar si el usuario existe
+    const usuario = await Usuario.findById(id)
+    if (!usuario) {
+      return res.status(404).json({
+        msg: "Usuario no encontrado",
+      })
+    }
+
+    // Cambiar el estado
+    usuario.estado = !usuario.estado
+    await usuario.save()
+
+    // Si el usuario es un cliente o empleado, actualizar también su estado en esas colecciones
+    if (usuario.rol) {
+      const rol = await Rol.findById(usuario.rol)
+
+      if (rol && rol.nombreRol === "Cliente") {
+        await Cliente.findOneAndUpdate({ usuario: id }, { estadocliente: usuario.estado })
+      } else if (rol && rol.nombreRol === "Empleado") {
+        await Empleado.findOneAndUpdate({ usuario: id }, { estadoempleado: usuario.estado })
+      }
+    }
+
+    res.json({
+      msg: `Usuario ${usuario.estado ? "activado" : "desactivado"} correctamente`,
+      usuario,
+    })
+  } catch (error) {
+    console.error("Error al cambiar estado del usuario:", error)
+    res.status(500).json({
+      msg: "Error al cambiar estado del usuario",
+      error: error.message,
+    })
+  }
+}
+
 // Asegúrate de exportar la nueva función
 module.exports = {
   usuariosGet,
@@ -592,5 +634,6 @@ module.exports = {
   usuariosDelete,
   PromGet,
   activateAccount,
+  usuariosToggleEstado,
 }
 

@@ -10,6 +10,7 @@ const {
   usuariosUpdateRol,
   usuariosDelete,
   PromGet,
+  usuariosToggleEstado,
 } = require("../controllers/usuario")
 
 const router = Router()
@@ -41,7 +42,12 @@ router.delete("/:id", usuariosDelete)
 // Ruta para consultar usuarios con parámetros
 router.get("/buscar/prom", PromGet)
 
+// Ruta para activar/desactivar un usuario
+router.patch("/:id/toggle-estado", usuariosToggleEstado)
+
 module.exports = router
+
+
 
 
 
