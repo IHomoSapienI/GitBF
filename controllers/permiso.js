@@ -39,6 +39,7 @@ const permisosPost = async (req, res = response) => {
   const categoriasValidas = [
     "usuarios",
     "roles",
+    "permisos",
     "configuración",
     "reportes",
     "compras",
