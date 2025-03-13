@@ -40,7 +40,9 @@ class Server {
     middlewares() {
         // CORS
         this.app.use(cors({
-            origin: 'http://localhost:3000',
+            // origin: 'http://localhost:3000',
+            origin: "*", // Permite el dominio de ngrok
+            credentials: true, // Permite cookies en las peticiones
         }));
 
         this.app.use(bodyParser.json()); // for parsing application/json
