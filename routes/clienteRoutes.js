@@ -8,7 +8,8 @@ const {
   getClienteCompras, 
   getClienteServicios, 
   updateClienteData, 
-  getClienteFacturas 
+  getClienteFacturas,
+  getClienteStats
 } = require('../controllers/clienteController');
 
 const router = Router();
@@ -31,6 +32,9 @@ router.get('/:id/servicios', verificarClientePropio, getClienteServicios);
 
 // Obtener facturas del cliente
 router.get('/:id/facturas', verificarClientePropio, getClienteFacturas);
+
+// Obtener estadísticas del cliente
+router.get('/:id/stats', verificarClientePropio, getClienteStats);
 
 // Actualizar datos del cliente
 router.put('/:id', verificarClientePropio, updateClienteData);
