@@ -22,11 +22,6 @@ router.put("/:id", verificarPermisos(["actualizarPermisos"]), permisosPut)
 router.delete("/:id", verificarPermisos(["eliminarPermisos"]), permisosDelete)
 router.get("/export-excel", verificarPermisos(["verPermisos"]), permisosExportExcel)
 
-// Rutas para permisos con permisos específicos
-// router.get("/", permisosGet)
-// router.post("/", permisosPost)
-// router.put("/:id", permisosPut)
-// router.delete("/:id", permisosDelete)
-// router.get("/export-excel", permisosExportExcel)
+
 module.exports = router
 

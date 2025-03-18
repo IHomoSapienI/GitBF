@@ -15,14 +15,6 @@ router.put('/:id', verificarPermisos (['actualizarVentaServicio']), ventaservici
 
 router.delete('/:id', verificarPermisos (['eliminarVentaServicio']), ventaserviciosDelete)
 
-// router.get('/', ventaserviciosGet)
-
-// router.post('/',ventaserviciosPost)
-
-// router.put('/:id',  ventaserviciosPut)
-
-// router.delete('/:id', ventaserviciosDelete)
-
 router.put('/:id/agregar-servicios', agregarServiciosVenta);
 
 router.put('/:id/finalizar', finalizarVenta);
