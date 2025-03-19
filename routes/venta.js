@@ -10,6 +10,7 @@ const {
   finalizarVenta,
   agregarProductosVenta,
   agregarServiciosVenta,
+  obtenerVentasPorCliente
 } = require("../controllers/venta")
 
 const router = Router()
@@ -22,6 +23,10 @@ router.get("/", obtenerVentas)
 
 // Ruta para obtener una venta específica por ID
 router.get("/:id",  obtenerVentaPorId)
+
+
+//Obtener ventas por clientes
+router.get("/cliente", obtenerVentasPorCliente)
 
 // Ruta para crear una nueva venta
 router.post("/", crearVenta)

@@ -327,6 +327,29 @@ const iniciarCita = async (req, res) => {
     }
 };
 
+// Método para obtener citas filtradas por cliente
+const obtenerCitasPorCliente = async (req, res) => {
+    try {
+      const clienteId = req.query.clienteId || req.usuario?.id
+  
+      if (!clienteId) {
+        return res.status(400).json({ message: "ID de cliente no proporcionado" })
+      }
+  
+      // Buscar citas donde el cliente coincida con el ID del cliente actual
+      const citas = await Cita.find({ nombrecliente: clienteId })
+        .populate("nombreempleado")
+        .populate("nombrecliente")
+        .populate("servicios.servicio")
+        .sort({ fechacita: 1 }) // Ordenar por fecha ascendente
+  
+      res.status(200).json(citas)
+    } catch (error) {
+      console.error("Error al obtener citas del cliente:", error)
+      res.status(500).json({ message: "Error al obtener las citas", error })
+    }
+  }
+
 module.exports = {
     crearCita,
     obtenerCitas,
@@ -335,4 +358,5 @@ module.exports = {
     eliminarCita,
     verificarDisponibilidad,
     iniciarCita,
+    obtenerCitasPorCliente
 };

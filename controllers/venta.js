@@ -729,6 +729,29 @@ const agregarServiciosVenta = async (req, res = response) => {
   }
 }
 
+
+const obtenerVentasPorCliente = async (req, res) => {
+  try {
+    const clienteId = req.query.clienteId || req.usuario?.id
+
+    if (!clienteId) {
+      return res.status(400).json({ message: "ID de cliente no proporcionado" })
+    }
+
+    // Buscar ventas donde el cliente coincida con el ID del cliente actual
+    const ventas = await Venta.find({ cliente: clienteId })
+      .populate("cliente")
+      .populate("empleado")
+      .populate("cita")
+      .sort({ fechaCreacion: -1 }) // Ordenar por fecha descendente (más recientes primero)
+
+    res.status(200).json(ventas)
+  } catch (error) {
+    console.error("Error al obtener ventas del cliente:", error)
+    res.status(500).json({ message: "Error al obtener las ventas", error })
+  }
+}
+
 module.exports = {
   obtenerVentas,
   obtenerVentaPorId,
@@ -738,4 +761,5 @@ module.exports = {
   finalizarVenta,
   agregarProductosVenta,
   agregarServiciosVenta,
+  obtenerVentasPorCliente
 }
