@@ -730,27 +730,47 @@ const agregarServiciosVenta = async (req, res = response) => {
 }
 
 
+// En controllers/venta.js
 const obtenerVentasPorCliente = async (req, res) => {
   try {
-    const clienteId = req.query.clienteId || req.usuario?.id
-
+    const clienteId = req.query.clienteId || req.usuario?.id;
+    
     if (!clienteId) {
-      return res.status(400).json({ message: "ID de cliente no proporcionado" })
+      return res.status(400).json({ message: "ID de cliente no proporcionado" });
     }
-
-    // Buscar ventas donde el cliente coincida con el ID del cliente actual
-    const ventas = await Venta.find({ cliente: clienteId })
+    
+    console.log("Buscando ventas para el cliente/usuario ID:", clienteId);
+    
+    // Buscar ventas donde el cliente coincida con el ID proporcionado
+    // Primero intentar buscar por cliente (si es un ID de cliente)
+    let ventas = await Venta.find({ cliente: clienteId })
       .populate("cliente")
       .populate("empleado")
       .populate("cita")
-      .sort({ fechaCreacion: -1 }) // Ordenar por fecha descendente (más recientes primero)
-
-    res.status(200).json(ventas)
+      .sort({ fechaCreacion: -1 });
+    
+    // Si no hay resultados, intentar buscar por usuario (si es un ID de usuario)
+    if (ventas.length === 0) {
+      // Primero intentar encontrar el cliente asociado al usuario
+      const cliente = await Cliente.findOne({ usuario: clienteId });
+      
+      if (cliente) {
+        ventas = await Venta.find({ cliente: cliente._id })
+          .populate("cliente")
+          .populate("empleado")
+          .populate("cita")
+          .sort({ fechaCreacion: -1 });
+      }
+    }
+    
+    console.log(`Se encontraron ${ventas.length} ventas para el cliente/usuario ID: ${clienteId}`);
+    
+    res.status(200).json(ventas);
   } catch (error) {
-    console.error("Error al obtener ventas del cliente:", error)
-    res.status(500).json({ message: "Error al obtener las ventas", error })
+    console.error("Error al obtener ventas del cliente:", error);
+    res.status(500).json({ message: "Error al obtener las ventas", error: error.message });
   }
-}
+};
 
 module.exports = {
   obtenerVentas,

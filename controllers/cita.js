@@ -327,28 +327,47 @@ const iniciarCita = async (req, res) => {
     }
 };
 
-// Método para obtener citas filtradas por cliente
+// En controllers/cita.js
 const obtenerCitasPorCliente = async (req, res) => {
     try {
-      const clienteId = req.query.clienteId || req.usuario?.id
-  
+      const clienteId = req.query.clienteId || req.usuario?.id;
+      
       if (!clienteId) {
-        return res.status(400).json({ message: "ID de cliente no proporcionado" })
+        return res.status(400).json({ message: "ID de cliente no proporcionado" });
       }
-  
-      // Buscar citas donde el cliente coincida con el ID del cliente actual
-      const citas = await Cita.find({ nombrecliente: clienteId })
+      
+      console.log("Buscando citas para el cliente/usuario ID:", clienteId);
+      
+      // Buscar citas donde el cliente coincida con el ID proporcionado
+      // Primero intentar buscar por nombrecliente (si es un ID de cliente)
+      let citas = await Cita.find({ nombrecliente: clienteId })
         .populate("nombreempleado")
         .populate("nombrecliente")
         .populate("servicios.servicio")
-        .sort({ fechacita: 1 }) // Ordenar por fecha ascendente
-  
-      res.status(200).json(citas)
+        .sort({ fechacita: 1 });
+      
+      // Si no hay resultados, intentar buscar por usuario (si es un ID de usuario)
+      if (citas.length === 0) {
+        // Primero intentar encontrar el cliente asociado al usuario
+        const cliente = await Cliente.findOne({ usuario: clienteId });
+        
+        if (cliente) {
+          citas = await Cita.find({ nombrecliente: cliente._id })
+            .populate("nombreempleado")
+            .populate("nombrecliente")
+            .populate("servicios.servicio")
+            .sort({ fechacita: 1 });
+        }
+      }
+      
+      console.log(`Se encontraron ${citas.length} citas para el cliente/usuario ID: ${clienteId}`);
+      
+      res.status(200).json(citas);
     } catch (error) {
-      console.error("Error al obtener citas del cliente:", error)
-      res.status(500).json({ message: "Error al obtener las citas", error })
+      console.error("Error al obtener citas del cliente:", error);
+      res.status(500).json({ message: "Error al obtener las citas", error: error.message });
     }
-  }
+  };
 
 module.exports = {
     crearCita,
