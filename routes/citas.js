@@ -16,11 +16,11 @@ const router = Router();
 
 router.post('/',  crearCita);
 router.get('/', obtenerCitas);
+router.get('/cliente', obtenerCitasPorCliente);
 router.get('/:id',  obtenerCitaPorId);
 router.put('/:id',  actualizarCita);
 router.delete('/:id', eliminarCita);
 router.post('/verificar-disponibilidad', verificarDisponibilidad);
 router.put('/:id/iniciar', iniciarCita);
-router.get('/cliente', obtenerCitasPorCliente);
 
 module.exports = router;

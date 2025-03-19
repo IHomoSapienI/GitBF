@@ -21,12 +21,12 @@ const router = Router()
 // Ruta para obtener todas las ventas
 router.get("/", obtenerVentas)
 
+//Obtener ventas por clientes
+router.get("/cliente", obtenerVentasPorCliente)
+
 // Ruta para obtener una venta específica por ID
 router.get("/:id",  obtenerVentaPorId)
 
-
-//Obtener ventas por clientes
-router.get("/cliente", obtenerVentasPorCliente)
 
 // Ruta para crear una nueva venta
 router.post("/", crearVenta)
