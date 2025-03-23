@@ -294,7 +294,7 @@ const iniciarCita = async (req, res) => {
         
         // Obtener el siguiente código de venta
         const contador = await Contador.findOneAndUpdate(
-            { nombre: "ventaservicio" },
+            { nombre: "venta" },
             { $inc: { secuencia: 1 } },
             { new: true, upsert: true }
         );
