@@ -31,8 +31,8 @@ const obtenerVentas = async (req, res = response) => {
         path: "cita",
         select: "fechacita",
       })
-      .populate("productos.producto", "nombreProducto categoria stock")
-      .populate("servicios.servicio", "nombreServicio categoria")
+      .populate("productos.producto", "nombreProducto precio stock categoria")
+      .populate("servicios.servicio", "nombreServicio precio tiempo")
       .sort({ fechaCreacion: -1 }) // Ordenar por fecha de creación descendente
       .lean()
 
