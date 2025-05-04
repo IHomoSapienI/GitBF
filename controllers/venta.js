@@ -980,8 +980,7 @@ const obtenerVentasPorCita = async (req, res = response) => {
   }
 };
 
-// En venta.js (rutas)
-router.get("/cita/:citaId", obtenerVentasPorCita);
+
 
 module.exports = {
   obtenerVentas,
