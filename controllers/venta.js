@@ -962,6 +962,27 @@ const obtenerVentasPorCliente = async (req, res) => {
   }
 };
 
+// En venta.js (controlador)
+const obtenerVentasPorCita = async (req, res = response) => {
+  const { citaId } = req.params;
+  try {
+    const ventas = await Venta.find({ cita: citaId })
+      .populate("cliente")
+      .populate("empleado")
+      .populate("cita")
+      .populate("productos.producto")
+      .populate("servicios.servicio");
+    
+    res.json(ventas);
+  } catch (error) {
+    console.error("Error al obtener ventas por cita:", error);
+    res.status(500).json({ msg: "Error al obtener ventas por cita" });
+  }
+};
+
+// En venta.js (rutas)
+router.get("/cita/:citaId", obtenerVentasPorCita);
+
 module.exports = {
   obtenerVentas,
   obtenerVentaPorId,
@@ -971,5 +992,6 @@ module.exports = {
   finalizarVenta,
   agregarProductosVenta,
   agregarServiciosVenta,
-  obtenerVentasPorCliente
+  obtenerVentasPorCliente,
+  obtenerVentasPorCita
 };
