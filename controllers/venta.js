@@ -980,7 +980,24 @@ const obtenerVentasPorCita = async (req, res = response) => {
   }
 };
 
-
+const validarVenta = (req, res, next) => {
+  const { servicios } = req.body;
+  if (servicios && servicios.length > 0) {
+    // Validar estructura de servicios
+    const serviciosValidos = servicios.every(s => 
+      s.servicio && s.nombreServicio && 
+      typeof s.precio === 'number' && 
+      typeof s.precioFinal === 'number'
+    );
+    if (!serviciosValidos) {
+      return res.status(400).json({
+        msg: "Estructura de servicios inválida",
+        detalles: "Cada servicio debe tener servicio, nombreServicio, precio y precioFinal"
+      });
+    }
+  }
+  next();
+};
 
 module.exports = {
   obtenerVentas,
@@ -992,5 +1009,6 @@ module.exports = {
   agregarProductosVenta,
   agregarServiciosVenta,
   obtenerVentasPorCliente,
-  obtenerVentasPorCita
+  obtenerVentasPorCita,
+  validarVenta
 };
