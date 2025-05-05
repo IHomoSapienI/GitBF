@@ -32,13 +32,13 @@ const crearCita = async (req, res) => {
         }
 
         // Crear fecha y hora combinadas
-        const fechaHoraCompleta = new Date(`${fechacita}T${horacita}`);
+        // const fechaHoraCompleta = new Date(`${fechacita}T${horacita}`);
 
         // Crear una nueva instancia de Cita
         const nuevaCita = new Cita({
             nombreempleado,
             nombrecliente,
-            fechacita: fechaHoraCompleta,
+            fechacita,
             horacita,
             duracionTotal,
             montototal,
