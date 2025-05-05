@@ -2,9 +2,10 @@ const Cita = require('../modules/cita');
 const Cliente = require('../modules/cliente');
 const Empleado = require('../modules/empleado');
 const Servicio = require('../modules/servicio'); // Importar el modelo de servicio
+const Contador = require('../modules/contador'); // Añadido para resolver error de referencia
+const VentaServicio = require('../modules/ventaServicio'); // Añadido para resolver error de referencia
 
 // Modificar el controlador crearCita en controllers/cita.js
-
 const crearCita = async (req, res) => {
     try {
         const { 
@@ -31,12 +32,16 @@ const crearCita = async (req, res) => {
             return res.status(400).json({ message: 'Debe proporcionar al menos un servicio' });
         }
 
+        // Crear una fecha sin componente de hora
+        const fechaSinHora = new Date(fechacita);
+        fechaSinHora.setHours(0, 0, 0, 0);
+
         // Crear una nueva instancia de Cita
         const nuevaCita = new Cita({
             nombreempleado,
             nombrecliente,
-            fechacita,
-            horacita,
+            fechacita: fechaSinHora, // Guardar solo la fecha sin hora
+            horacita,                // Guardar la hora como string separado
             duracionTotal,
             montototal,
             estadocita: estadocita || 'Confirmada',
@@ -92,12 +97,20 @@ const obtenerCitaPorId = async (req, res) => {
 const actualizarCita = async (req, res) => {
     try {
         const { id } = req.params;
-        const { nombreempleado, nombrecliente, fechacita, montototal, estadocita, servicios } = req.body;
+        const { nombreempleado, nombrecliente, fechacita, horacita, montototal, estadocita, servicios } = req.body;
+
+        // Crear una fecha sin componente de hora si se proporciona fechacita
+        let fechaActualizada = undefined;
+        if (fechacita) {
+            fechaActualizada = new Date(fechacita);
+            fechaActualizada.setHours(0, 0, 0, 0);
+        }
 
         const cita = await Cita.findByIdAndUpdate(id, {
             nombreempleado,
             nombrecliente,
-            fechacita,
+            fechacita: fechaActualizada,
+            horacita,
             montototal,
             estadocita,
             servicios // Incluir servicios en la actualización
@@ -115,59 +128,6 @@ const actualizarCita = async (req, res) => {
     }
 };
 
-const cancelarCita = async (req, res) => {
-    try {
-        const { id } = req.params;
-        const { motivo } = req.body;
-
-        // Validar que se proporcione un motivo de cancelación
-        if (!motivo) {
-            return res.status(400).json({ 
-                message: 'Debe proporcionar un motivo de cancelación' 
-            });
-        }
-
-        // Buscar y actualizar la cita, incluyendo motivo y fecha de cancelación
-        const cita = await Cita.findByIdAndUpdate(
-            id,
-            {
-                estadocita: 'Cancelada',
-                motivo: motivo,
-                fechacancelacion: new Date() // Fecha actual automáticamente
-            },
-            { new: true }
-        )
-        .populate('nombreempleado', 'nombreempleado')
-        .populate('nombrecliente', 'nombrecliente')
-        .populate('servicios', 'nombreServicio precio');
-
-        if (!cita) {
-            return res.status(404).json({ message: 'Cita no encontrada' });
-        }
-
-        // Verificar que la cita no esté ya completada o cancelada
-        if (cita.estadocita === 'Completada') {
-            return res.status(400).json({ 
-                message: 'No se puede cancelar una cita ya completada' 
-            });
-        }
-
-        res.json({ 
-            message: 'Cita cancelada con éxito',
-            cita: {
-                ...cita._doc,
-                motivo: motivo,
-                fechacancelacion: new Date()
-            }
-        });
-    } catch (error) {
-        console.error('Error al cancelar la cita:', error);
-        res.status(500).json({ 
-            message: 'Error al cancelar la cita', 
-            error: error.message 
-        });
-    }
-};
 // Eliminar una cita por ID
 const eliminarCita = async (req, res) => {
     try {
@@ -260,9 +220,14 @@ const verificarDisponibilidad = async (req, res) => {
                 let hayConflicto = false;
                 
                 for (const cita of citasEmpleado) {
-                    const citaInicio = new Date(cita.fechacita);
-                    const citaHora = citaInicio.getHours();
-                    const citaMinuto = citaInicio.getMinutes();
+                    // Usar horacita para obtener la hora de la cita
+                    if (!cita.horacita) continue;
+                    
+                    const [citaHora, citaMinuto] = cita.horacita.split(':').map(Number);
+                    
+                    // Crear fecha de inicio de la cita
+                    const citaInicio = new Date(fecha);
+                    citaInicio.setHours(citaHora, citaMinuto, 0, 0);
                     
                     // Calcular la duración de la cita basada en sus servicios
                     let citaDuracion = 0;
@@ -274,7 +239,8 @@ const verificarDisponibilidad = async (req, res) => {
                         citaDuracion = 60; // 1 hora por defecto si no hay servicios
                     }
                     
-                    const citaFin = new Date(citaInicio);
+                    // Crear fecha de fin de la cita
+                    const citaFin = new Date(fecha);
                     const citaMinutosFin = citaMinuto + Math.floor(citaDuracion);
                     const citaHoraAdicional = Math.floor(citaMinutosFin / 60);
                     citaFin.setHours(citaHora + citaHoraAdicional, citaMinutosFin % 60, 0, 0);
@@ -323,9 +289,7 @@ const verificarDisponibilidad = async (req, res) => {
     }
 };
 
-
 // Iniciar cita (cambiar a "En Progreso")
-
 const iniciarCita = async (req, res) => {
     try {
         const { id } = req.params;
@@ -380,7 +344,7 @@ const iniciarCita = async (req, res) => {
     }
 };
 
-// En controllers/cita.js
+// Obtener citas por cliente
 const obtenerCitasPorCliente = async (req, res) => {
     try {
       const clienteId = req.query.clienteId || req.usuario?.id;
@@ -420,11 +384,10 @@ const obtenerCitasPorCliente = async (req, res) => {
       console.error("Error al obtener citas del cliente:", error);
       res.status(500).json({ message: "Error al obtener las citas", error: error.message });
     }
-  };
+};
 
 module.exports = {
     crearCita,
-    cancelarCita,
     obtenerCitas,
     obtenerCitaPorId,
     actualizarCita,
