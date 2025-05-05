@@ -1,5 +1,4 @@
-const mongoose = require("mongoose")
-const { Schema } = mongoose
+const { Schema, model } = require("mongoose")
 
 const VentaServicioSchema = Schema(
   {
@@ -91,5 +90,5 @@ VentaServicioSchema.virtual("empleadoNombre").get(function () {
   return this.empleado ? this.empleado.nombreempleado : "Empleado no especificado"
 })
 
-// Usar el patrón singleton para evitar redefinir el modelo
-module.exports = mongoose.models.VentaServicio || mongoose.model("VentaServicio", VentaServicioSchema)
+module.exports = model("VentaServicio", VentaServicioSchema)
+
