@@ -38,7 +38,7 @@ const crearCita = async (req, res) => {
         const nuevaCita = new Cita({
             nombreempleado,
             nombrecliente,
-            fechacita,
+            fechacita: fechaHoraCompleta,
             horacita,
             duracionTotal,
             montototal,
