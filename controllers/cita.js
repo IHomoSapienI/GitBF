@@ -31,6 +31,9 @@ const crearCita = async (req, res) => {
             return res.status(400).json({ message: 'Debe proporcionar al menos un servicio' });
         }
 
+        // Crear fecha y hora combinadas
+        const fechaHoraCompleta = new Date(`${fechacita}T${horacita}`);
+
         // Crear una nueva instancia de Cita
         const nuevaCita = new Cita({
             nombreempleado,
