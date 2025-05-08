@@ -88,65 +88,65 @@ const login = async (req, res) => {
 }
 
 const register = async (req, res) => {
-  const { nombre, apellido, email, password, confirmPassword, rol, estado, celular } = req.body;
+  const { nombre, apellido, email, password, confirmPassword, rol, estado, celular } = req.body
 
-  console.log("Registro - Datos recibidos:", { nombre, email, rol, estado });
+  console.log("Registro - Datos recibidos:", { nombre, email, rol, estado })
 
   try {
     // Validar campos obligatorios
     if (!nombre || !apellido || !email || !password || !confirmPassword || !celular) {
-      console.log("Faltan campos obligatorios");
+      console.log("Faltan campos obligatorios")
       return res.status(400).json({
         msg: "Faltan campos obligatorios (nombre, apellido, email, password, confirmPassword, celular)",
-      });
+      })
     }
 
     if (password !== confirmPassword) {
-      console.log("Las contraseñas no coinciden");
+      console.log("Las contraseñas no coinciden")
       return res.status(400).json({
         msg: "Las contraseñas no coinciden",
-      });
+      })
     }
 
-    const userExists = await User.findOne({ email });
+    const userExists = await User.findOne({ email })
     if (userExists) {
-      console.log("El usuario ya existe:", email);
-      return res.status(400).json({ message: "El usuario ya existe" });
+      console.log("El usuario ya existe:", email)
+      return res.status(400).json({ message: "El usuario ya existe" })
     }
 
-    let rolId;
+    let rolId
     if (rol) {
-      const existeRol = await Rol.findById(rol);
+      const existeRol = await Rol.findById(rol)
       if (!existeRol) {
-        console.log("El rol especificado no es válido:", rol);
+        console.log("El rol especificado no es válido:", rol)
         return res.status(400).json({
           msg: "El rol especificado no es válido",
-        });
+        })
       }
 
       // Verificar si el rol está activo
       if (!existeRol.estadoRol) {
-        console.log("Rol desactivado:", existeRol.nombreRol);
+        console.log("Rol desactivado:", existeRol.nombreRol)
         return res.status(403).json({
           msg: "El rol seleccionado está desactivado. Por favor, selecciona otro rol.",
           rolDesactivado: true,
-        });
+        })
       }
 
-      rolId = rol;
+      rolId = rol
     } else {
-      const defaultRol = await Rol.findOne({ nombreRol: "Cliente" });
+      const defaultRol = await Rol.findOne({ nombreRol: "Cliente" })
 
       // Verificar si el rol por defecto está activo
       if (!defaultRol.estadoRol) {
-        console.log("Rol por defecto desactivado:", defaultRol.nombreRol);
+        console.log("Rol por defecto desactivado:", defaultRol.nombreRol)
         return res.status(403).json({
           msg: "El rol por defecto está desactivado. Por favor, contacta al administrador.",
           rolDesactivado: true,
-        });
+        })
       }
 
-      rolId = defaultRol._id;
+      rolId = defaultRol._id
     }
 
     const newUser = await createUser({
@@ -157,16 +157,16 @@ const register = async (req, res) => {
       rol: rolId,
       estado,
       celular,
-    });
+    })
 
-    console.log("Usuario guardado en la base de datos:", JSON.stringify(newUser, null, 2));
+    console.log("Usuario guardado en la base de datos:", JSON.stringify(newUser, null, 2))
 
     const token = jwt.sign(
       { userId: newUser._id, role: newUser.rol.nombreRol },
       process.env.JWT_SECRET || "secret_key",
-      { expiresIn: "1h" }
-    );
-    console.log("Token generado:", token);
+      { expiresIn: "1h" },
+    )
+    console.log("Token generado:", token)
 
     res.json({
       token,
@@ -176,12 +176,12 @@ const register = async (req, res) => {
         email: newUser.email,
         name: newUser.nombre,
       },
-    });
+    })
   } catch (error) {
-    console.error("Error en el registro:", error);
-    res.status(500).json({ message: "Error en el servidor" });
+    console.error("Error en el registro:", error)
+    res.status(500).json({ message: "Error en el servidor" })
   }
-};
+}
 
 // Solicitar restablecimiento de contraseña
 const requestPasswordReset = async (req, res) => {
@@ -190,17 +190,15 @@ const requestPasswordReset = async (req, res) => {
   console.log("Solicitud de restablecimiento de contraseña para:", email)
 
   try {
-    // Verificar si el usuario existe
     const user = await User.findOne({ email }).populate("rol")
     if (!user) {
       console.log("Usuario no encontrado para restablecimiento de contraseña:", email)
-      // Por seguridad, no informamos al cliente que el usuario no existe
+      // Respuesta genérica por seguridad
       return res.status(200).json({
         message: "Si el correo existe en nuestra base de datos, recibirás un enlace para restablecer tu contraseña.",
       })
     }
 
-    // Verificar si el usuario está activo
     if (!user.estado) {
       console.log("Usuario inactivo solicitando restablecimiento:", email)
       return res.status(200).json({
@@ -208,46 +206,162 @@ const requestPasswordReset = async (req, res) => {
       })
     }
 
-    // Generar token aleatorio
+    // Generar token único (no hasheado para usarlo en la URL)
     const resetToken = crypto.randomBytes(32).toString("hex")
 
-    // Guardar token hasheado en la base de datos
-    const hashedToken = await bcrypt.hash(resetToken, 10)
+    // Guardar token hasheado y fecha de expiración (1 hora)
+    user.resetPasswordToken = await bcrypt.hash(resetToken, 10)
+    user.resetPasswordExpires = Date.now() + 3600000 // 1 hora
 
-    // Actualizar usuario con el token y su fecha de expiración (1 hora)
-    user.resetPasswordToken = hashedToken
-    user.resetPasswordExpires = Date.now() + 3600000 // 1 hora en milisegundos
-
-    // Guardar el usuario sin validar el esquema completo
-    // Esto evita problemas con valores predeterminados en otros campos
     await user.save({ validateBeforeSave: false })
 
     console.log("Token de restablecimiento generado para:", email)
 
-    // Enviar correo con el token
-    const resetUrl = `${req.protocol}://${req.get("host")}/reset-password/${resetToken}`
-
+    // Crear URL directa para resetear contraseña
+    const resetUrl = `${req.protocol}://${req.get("host")}/reset-password?token=${resetToken}`
+    console.log("URL de restablecimiento generada:", resetUrl) // Añade este log para depuración
     const mailOptions = {
       from: process.env.EMAIL_USER,
       to: user.email,
       subject: "Restablecimiento de contraseña",
-      html: `
-        <h1>Restablecimiento de contraseña</h1>
-        <p>Has solicitado restablecer tu contraseña.</p>
-        <p>Tu código de verificación es: <strong>${resetToken}</strong></p>
-        <p>Este código expirará en 1 hora.</p>
-        <p>Si no solicitaste este cambio, puedes ignorar este correo.</p>
-      `,
+      html: `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Restablecimiento de contraseña</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+      border: 1px solid #e1e1e1;
+      border-radius: 5px;
+    }
+    .header {
+      text-align: center;
+      padding: 20px 0;
+      border-bottom: 1px solid #e1e1e1;
+    }
+    .content {
+      padding: 20px 0;
+    }
+    .button-container {
+      text-align: center;
+      margin: 30px 0;
+    }
+    .button {
+      display: inline-block;
+      background-color: #4a90e2;
+      color: white !important;
+      text-decoration: none;
+      padding: 12px 30px;
+      border-radius: 4px;
+      font-weight: bold;
+      font-size: 16px;
+    }
+    .footer {
+      text-align: center;
+      padding-top: 20px;
+      border-top: 1px solid #e1e1e1;
+      font-size: 12px;
+      color: #777;
+    }
+    .logo {
+      max-width: 150px;
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <img src="https://gitbf.onrender.com/uploads/logo1.png" alt="NailsSoft Logo" class="logo">
+      <h1>NailsSoft</h1>
+    </div>
+    <div class="content">
+      <h2>Restablecimiento de contraseña</h2>
+      <p>Hola,</p>
+      <p>Recibimos una solicitud para restablecer la contraseña de tu cuenta. Haz clic en el botón de abajo para crear una nueva contraseña:</p>
+      
+      <div class="button-container">
+        <a href="${resetUrl}" class="button">Restablecer mi contraseña</a>
+      </div>
+      
+      <p>Si no solicitaste este cambio, puedes ignorar este correo y tu contraseña permanecerá sin cambios.</p>
+      <p>Este enlace expirará en 1 hora por razones de seguridad.</p>
+    </div>
+    <div class="footer">
+      <p>Este es un correo electrónico automático, por favor no respondas a este mensaje.</p>
+      <p>&copy; ${new Date().getFullYear()} NailsSoft. Todos los derechos reservados.</p>
+    </div>
+  </div>
+</body>
+</html>`,
     }
 
     await transporter.sendMail(mailOptions)
     console.log("Correo de restablecimiento enviado a:", email)
 
     res.status(200).json({
-      message: "Se ha enviado un correo con las instrucciones para restablecer tu contraseña.",
+      message: "Se ha enviado un correo con el enlace para restablecer tu contraseña.",
     })
   } catch (error) {
     console.error("Error al solicitar restablecimiento de contraseña:", error)
+    res.status(500).json({ message: "Error en el servidor" })
+  }
+}
+
+// Restablecer contraseña
+const resetPassword = async (req, res) => {
+  const { token, password, confirmPassword } = req.body
+
+  console.log("Restableciendo contraseña con token:", token)
+
+  try {
+    // Validar que las contraseñas coincidan
+    if (password !== confirmPassword) {
+      console.log("Las contraseñas no coinciden")
+      return res.status(400).json({ message: "Las contraseñas no coinciden" })
+    }
+
+    // Buscar usuario con token no expirado
+    const user = await User.findOne({
+      resetPasswordExpires: { $gt: Date.now() },
+    })
+
+    if (!user) {
+      console.log("No se encontró usuario con token válido")
+      return res.status(400).json({ message: "El enlace de restablecimiento ha expirado o es inválido" })
+    }
+
+    // Verificar el token
+    const isValid = await bcrypt.compare(token, user.resetPasswordToken)
+    if (!isValid) {
+      console.log("Token no coincide")
+      return res.status(400).json({ message: "El enlace de restablecimiento es inválido" })
+    }
+
+    // Hashear y guardar nueva contraseña
+    const salt = await bcrypt.genSalt(10)
+    user.password = await bcrypt.hash(password, salt)
+    user.resetPasswordToken = undefined
+    user.resetPasswordExpires = undefined
+
+    await user.save()
+
+    console.log("Contraseña restablecida correctamente para:", user.email)
+
+    res.status(200).json({ message: "Contraseña restablecida correctamente" })
+  } catch (error) {
+    console.error("Error al restablecer contraseña:", error)
     res.status(500).json({ message: "Error en el servidor" })
   }
 }
@@ -261,7 +375,6 @@ const verifyResetToken = async (req, res) => {
   try {
     // Buscar usuario con token válido y no expirado
     const user = await User.findOne({
-      resetPasswordToken: { $exists: true },
       resetPasswordExpires: { $gt: Date.now() },
     })
 
@@ -279,92 +392,18 @@ const verifyResetToken = async (req, res) => {
     }
 
     console.log("Token verificado correctamente para usuario:", user.email)
-
-    // Devolver un token temporal para permitir el restablecimiento
-    const resetAuthToken = jwt.sign(
-      { userId: user._id, purpose: "password-reset" },
-      process.env.JWT_SECRET || "secret_key",
-      { expiresIn: "15m" },
-    )
-
-    res.status(200).json({
-      message: "Token verificado correctamente",
-      resetAuthToken,
-      email: user.email,
-    })
+    res.status(200).json({ message: "Token válido", email: user.email })
   } catch (error) {
     console.error("Error al verificar token:", error)
     res.status(500).json({ message: "Error en el servidor" })
   }
 }
 
-// Restablecer contraseña
-const resetPassword = async (req, res) => {
-  const { resetAuthToken, password, confirmPassword } = req.body
-
-  console.log("Restableciendo contraseña con token de autorización")
-
-  try {
-    // Verificar que las contraseñas coincidan
-    if (password !== confirmPassword) {
-      console.log("Las contraseñas no coinciden")
-      return res.status(400).json({ message: "Las contraseñas no coinciden" })
-    }
-
-    // Verificar el token de autorización
-    let decoded
-    try {
-      decoded = jwt.verify(resetAuthToken, process.env.JWT_SECRET || "secret_key")
-    } catch (error) {
-      console.log("Token de autorización inválido o expirado")
-      return res.status(401).json({ message: "Sesión expirada. Por favor, solicita un nuevo restablecimiento." })
-    }
-
-    // Verificar que el propósito del token sea correcto
-    if (decoded.purpose !== "password-reset") {
-      console.log("Token con propósito incorrecto")
-      return res.status(401).json({ message: "Token no autorizado para esta operación" })
-    }
-
-    // Buscar el usuario
-    const user = await User.findById(decoded.userId)
-
-    if (!user || !user.resetPasswordToken || user.resetPasswordExpires < Date.now()) {
-      console.log("Usuario no encontrado o token expirado")
-      return res.status(400).json({ message: "La sesión de restablecimiento ha expirado" })
-    }
-
-    // Hashear la nueva contraseña
-    const salt = await bcrypt.genSalt(10)
-    const hashedPassword = await bcrypt.hash(password, salt)
-
-    // Actualizar la contraseña y limpiar los campos de restablecimiento usando updateOne
-    // Esto evita problemas de validación con el esquema
-    await User.updateOne(
-      { _id: user._id },
-      {
-        $set: {
-          password: hashedPassword,
-          resetPasswordToken: undefined,
-          resetPasswordExpires: undefined,
-        },
-      },
-    )
-
-    console.log("Contraseña restablecida correctamente para:", user.email)
-
-    res.status(200).json({ message: "Contraseña restablecida correctamente" })
-  } catch (error) {
-    console.error("Error al restablecer contraseña:", error)
-    res.status(500).json({ message: "Error en el servidor" })
-  }
-}
-
+// Añade la función a los exports
 module.exports = {
   login,
   register,
   requestPasswordReset,
-  verifyResetToken,
   resetPassword,
+  verifyResetToken,
 }
-
