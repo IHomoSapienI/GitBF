@@ -357,49 +357,55 @@ const verifyResetToken = async (req, res) => {
 
 // En la función resetPassword:
 const resetPassword = async (req, res) => {
-  const { token, password, confirmPassword } = req.body
+  const { token, password, confirmPassword } = req.body;
 
-  console.log("Restableciendo contraseña con token de autorización")
+  console.log("Restableciendo contraseña con token de autorización");
 
   try {
     // Verificar el token temporal primero
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || "secret_key")
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || "secret_key");
     if (!decoded.resetVerified) {
-      return res.status(401).json({ message: "Autorización inválida" })
+      return res.status(401).json({ message: "Autorización inválida" });
+    }
+
+    // Buscar usuario por ID del token
+    const user = await User.findById(decoded.userId);
+    if (!user) {
+      console.log("Usuario no encontrado");
+      return res.status(400).json({ message: "Usuario no encontrado" });
     }
 
     // Validar que las contraseñas coincidan
     if (password !== confirmPassword) {
-      console.log("Las contraseñas no coinciden")
-      return res.status(400).json({ message: "Las contraseñas no coinciden" })
-    }
-
-    // Buscar usuario
-    const user = await User.findById(decoded.userId)
-    if (!user) {
-      console.log("Usuario no encontrado")
-      return res.status(400).json({ message: "Usuario no encontrado" })
+      console.log("Las contraseñas no coinciden");
+      return res.status(400).json({ message: "Las contraseñas no coinciden" });
     }
 
     // Hashear y guardar nueva contraseña
-    const salt = await bcrypt.genSalt(10)
-    user.password = await bcrypt.hash(password, salt)
-    user.resetPasswordToken = undefined
-    user.resetPasswordExpires = undefined
+    const salt = await bcrypt.genSalt(10);
+    user.password = await bcrypt.hash(password, salt);
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpires = undefined;
 
-    await user.save()
+    await user.save();
 
-    console.log("Contraseña restablecida correctamente para:", user.email)
+    console.log("Contraseña restablecida correctamente para:", user.email);
 
-    res.status(200).json({ message: "Contraseña restablecida correctamente" })
+    res.status(200).json({ message: "Contraseña restablecida correctamente" });
   } catch (error) {
-    console.error("Error al restablecer contraseña:", error)
+    console.error("Error al restablecer contraseña:", error);
     if (error.name === "TokenExpiredError") {
-      return res.status(401).json({ message: "La sesión de restablecimiento ha expirado" })
+      return res.status(401).json({ message: "La sesión de restablecimiento ha expirado" });
     }
-    res.status(500).json({ message: "Error en el servidor" })
+    if (error.name === "JsonWebTokenError") {
+      return res.status(401).json({ message: "Token de autorización inválido" });
+    }
+    res.status(500).json({ 
+      message: "Error en el servidor",
+      error: error.message 
+    });
   }
-}
+};
 
 // Añade la función a los exports
 module.exports = {
