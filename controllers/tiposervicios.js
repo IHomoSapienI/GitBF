@@ -1,6 +1,6 @@
 const { response } = require("express")
 const TiposervicioTs = require("../modules/tiposervicios.js")
-const tiposerv = require("../modules/tiposerv.js")
+
 
 
 // Obtener todos los tipos de servicios
@@ -102,6 +102,10 @@ const tiposerviciostsDelete = async (req, res = response) => {
                 msg: "Tipo de servicio no encontrado",
             })
         }
+
+        // Eliminar el tipo de servicio de la base de datos
+        await TiposervicioTs.findByIdAndDelete(id);
+
         res.json({
             msg: "Tipo de servicio eliminado correctamente",
         })
