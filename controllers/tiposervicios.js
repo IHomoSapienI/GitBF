@@ -33,7 +33,7 @@ res.json({
 
 const tiposerviciostsPost = async (req, res = response) => { 
     const { nombreTipoServicio, activo } = req.body // Extraer datos del cuerpo de la solicitud
-
+    console.log("🔎 Datos recibidos:", { nombreTipoServicio, activo });
     // Validar los datos recibidos
     if (!nombreTipoServicio || activo === undefined) {
         return res.status(400).json({
@@ -42,7 +42,7 @@ const tiposerviciostsPost = async (req, res = response) => {
     }
 
     // Crear una nueva instancia del modelo Tiposervicio
-    const tiposerviciots = new Tiposerviciots({ nombreTipoServicio, activo })
+    const tiposerviciots = new TiposervicioTs({ nombreTipoServicio, activo })
     try {
         // Guardar el nuevo tipo de servicio en la base de datos
         await tiposerviciots.save()
