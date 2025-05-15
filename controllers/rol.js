@@ -98,7 +98,7 @@ const rolesPost = async (req, res = response) => {
           .join(", "),
       })
     } else {
-      res.status(500).json({ msg: "Error al crear el rol" })
+      res.status(500).json({ msg: "Error al crear el rol, No pueden haber 2 Roles con el mismo nombre " })
     }
   }
 }
