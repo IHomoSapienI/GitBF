@@ -269,6 +269,10 @@ const usuariosPut = async (req, res = response) => {
   const { id } = req.params
   const { _id, password, correo, email, rol, ...resto } = req.body
 
+  // Agregar el correo/email manualmente si vienen
+if (correo) resto.correo = correo
+if (email) resto.email = email
+
   try {
     // Verificar si el usuario existe
     const usuario = await Usuario.findById(id).populate("rol")
