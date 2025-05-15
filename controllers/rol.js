@@ -29,6 +29,15 @@ const rolesPost = async (req, res = response) => {
   const { nombreRol, permisoRol, estadoRol } = req.body // Extraer datos del cuerpo de la solicitud
   console.log("Datos recibidos en backend:", { nombreRol, permisoRol, estadoRol })
 
+  //Validación del nombreRol 
+  const regexNombre = /^[a-zA-Z0-9\s]+$/ // Expresión regular para permitir solo letras, números y espacios
+  if (!nombreRol || nombreRol.trim()=== ""){
+    return res.status(400).json({ msg: "El campo nombreRol es obligatorio." });
+  }
+  if (!regexNombre.test(nombreRol)) {
+    return res.status(400).json({ msg: "El campo nombreRol solo puede contener letras, números y espacios." });
+  }
+
   // Asegúrate de que permisoRol sea un arreglo
   let permisosArray
   if (typeof permisoRol === "string") {
