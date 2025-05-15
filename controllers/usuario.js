@@ -282,6 +282,33 @@ if (email) resto.email = email
       })
     }
 
+    if (usuario.rol.nombreRol === "Cliente") {
+  await Cliente.findOneAndUpdate(
+    { usuario: id },
+    {
+      nombrecliente: resto.nombre || usuario.nombre,
+      apellidocliente: resto.apellido || usuario.apellido,
+      correocliente: resto.email || resto.correo || usuario.correo,
+      celularcliente: resto.celular || usuario.celular,
+      // otros campos si aplican
+    }
+  )
+}
+if (usuario.rol.nombreRol === "Empleado") {
+  await Empleado.findOneAndUpdate(
+    { usuario: id },
+    {
+      nombreempleado: resto.nombre || usuario.nombre,
+      apellidoempleado: resto.apellido || usuario.apellido,
+      correoempleado: resto.email || resto.correo || usuario.correo,
+      telefonoempleado: resto.celular || usuario.celular,
+      celularempleado: resto.celular || usuario.celular,
+      // otros campos como salario o especialidad si se actualizan
+    }
+  )
+}
+
+
     // Si se está cambiando el rol
     if (rol && rol !== usuario.rol._id.toString()) {
       // Verificar que el nuevo rol exista
