@@ -17,7 +17,7 @@ const permisoSchema = Joi.object({
     descripcion: Joi.string()
     .trim()
     .min(10)
-    .max(100)
+    .max(80)
     .required()
     .pattern(/^[a-zA-Z0-9\s]+$/)
     .messages({
