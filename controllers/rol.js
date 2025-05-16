@@ -52,7 +52,7 @@ const rolesPost = async (req, res = response) => {
 
     const rol = new Rol({
       nombreRol,
-      permisoRol: permisosArray,
+      permisoRol: permisoArray,
       estadoRol,
       esAdmin: isAdmin,
     });
@@ -164,7 +164,7 @@ const rolesPut = async (req, res = response) => {
   const {error, value} = schemaPut.validate(req.body, {abortEarly: false}) // Validar los datos de entrada
   if (error) {
     return res.status(400).json({
-      msg: error.details.map((e)=> e.message).joiin(", "),
+      msg: error.details.map((e)=> e.message).join(", "),
     });
   }
 
