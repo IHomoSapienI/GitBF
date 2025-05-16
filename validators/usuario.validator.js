@@ -122,7 +122,7 @@ const usuarioSchema = Joi.object({
     'boolean.base': 'El campo estado debe ser un booleano.',
     'any.required': 'El campo estado es obligatorio.',
   }),
-    especalidad: Joi.string(),
+    especialidad: Joi.string(),
     salario: Joi.number()
   }).unknown(false);
 
