@@ -1,5 +1,5 @@
 const Empleado = require('../modules/empleado');
-
+// prueba
 // Crear un nuevo empleado
 const crearEmpleado = async (req, res) => {
     try {
