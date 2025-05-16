@@ -5,7 +5,7 @@ const Rol = require("../modules/rol")
 const { createUser } = require("../controllers/userHelper")
 const nodemailer = require("nodemailer")
 const crypto = require("crypto")
-
+//prueba 1
 const transporter = nodemailer.createTransport({
   service: process.env.EMAIL_SERVICE,
   auth: {
