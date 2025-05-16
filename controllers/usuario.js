@@ -91,7 +91,7 @@ const usuariosPost = async (req, res = response) => {
       return res.status(400).json({ errores})
     }
 
-    const {nombre, apellido, email, celular, password, estado}
+    const {nombre, apellido, email, celular, password, estado, rol}
     = value
     const emailExistente = await Usuario.findOne({ $or: [{ correo: email }, { email }] })
     if (emailExistente) {
