@@ -33,7 +33,7 @@ const rolesPost = async (req, res = response) => {
   
   if (error) {
     return res.status(400).json({
-      msg: error.details.map((e) => e.message).join(", "),
+      msg: error.details.map((err) => err.message),
     });
   }
   const { nombreRol, permisoRol, estadoRol } = value;
