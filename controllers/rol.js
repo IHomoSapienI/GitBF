@@ -38,9 +38,9 @@ const rolesPost = async (req, res = response) => {
   
   // Verificar que el nombreRol no contenga caracteres especiales
   if (nombreRol.length < 5 || nombreRol.length > 30) {
-    return res.status(400).json({ msg: "El campo Nombre Rol debe tener entre 5 y 30 caracteres." });
+    return res.status(400).json({ msg: "El campo nombreRol debe tener entre 5 y 30 caracteres." });
   }
-  
+
   if (!regexNombre.test(nombreRol)) {
     return res.status(400).json({ msg: "El campo Nombre Rol solo puede contener letras, números y espacios." });
   }
@@ -98,7 +98,7 @@ const rolesPost = async (req, res = response) => {
           .join(", "),
       })
     } else {
-      res.status(500).json({ msg: "Error al crear el rol, No pueden haber 2 Roles con el mismo nombre " })
+      res.status(500).json({ msg: "Error al crear el rol, No pueden haber 2 Roles con el mismo nombre" })
     }
   }
 }
