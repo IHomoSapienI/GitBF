@@ -37,7 +37,7 @@ const usuarioSchema = Joi.object({
     email: Joi.string()
     .trim()
     .email({ minDomainSegments: 2 })
-    .min(30)
+    .min(10)
     .max(80)
     .required()
     .pattern(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/)
