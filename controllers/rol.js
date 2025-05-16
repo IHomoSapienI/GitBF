@@ -202,7 +202,9 @@ const rolesPut = async (req, res = response) => {
     res.json({ msg: "Rol actualizado exitosamente", rol: rolExistente });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ msg: "Error al actualizar el rol" });
+    res.status(500).json({
+      msg: "Error al actualizar el rol",
+    });
   }
 
   //   const { id } = req.params
@@ -237,36 +239,36 @@ const rolesPut = async (req, res = response) => {
 //       msg: "Error al actualizar el rol",
 //     })
 //   }
-// }
+}
 
-// // Método para cambiar el estado de un rol (activar/desactivar)
-// const rolesToggleEstado = async (req, res = response) => {
-//   const { id } = req.params
+// Método para cambiar el estado de un rol (activar/desactivar)
+const rolesToggleEstado = async (req, res = response) => {
+  const { id } = req.params
 
-//   try {
-//     // Verificar si el rol con el id proporcionado existe
-//     const rol = await Rol.findById(id)
-//     if (!rol) {
-//       return res.status(404).json({
-//         msg: "Rol no encontrado",
-//       })
-//     }
+  try {
+    // Verificar si el rol con el id proporcionado existe
+    const rol = await Rol.findById(id)
+    if (!rol) {
+      return res.status(404).json({
+        msg: "Rol no encontrado",
+      })
+    }
 
-//     // Cambiar el estado del rol (de activo a inactivo o viceversa)
-//     rol.estadoRol = !rol.estadoRol
-//     await rol.save()
+    // Cambiar el estado del rol (de activo a inactivo o viceversa)
+    rol.estadoRol = !rol.estadoRol
+    await rol.save()
 
-//     res.json({
-//       msg: `Rol ${rol.estadoRol ? "activado" : "desactivado"} exitosamente`,
-//       rol,
-//     })
-//   } catch (error) {
-//     console.error(error)
-//     res.status(500).json({
-//       msg: "Error al cambiar el estado del rol",
-//       error: error.message,
-//     })
-//   }
+    res.json({
+      msg: `Rol ${rol.estadoRol ? "activado" : "desactivado"} exitosamente`,
+      rol,
+    })
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({
+      msg: "Error al cambiar el estado del rol",
+      error: error.message,
+    })
+  }
 }
 
 // Método DELETE para eliminar un rol por su id
