@@ -122,10 +122,9 @@ const usuarioSchema = Joi.object({
     'boolean.base': 'El campo estado debe ser un booleano.',
     'any.required': 'El campo estado es obligatorio.',
   }),
-    especialidad: Joi.string(),
-    salario: Joi.number()
-  }).unknown(false);
-
+  especialidad: Joi.string(),
+  salario: Joi.number()
+}).unknown(false);
 module.exports = {
     usuarioSchema,
     usuarioUpdateSchema: usuarioSchema.fork(

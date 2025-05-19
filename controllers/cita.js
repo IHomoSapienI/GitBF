@@ -4,7 +4,7 @@ const Empleado = require('../modules/empleado');
 const Servicio = require('../modules/servicio'); // Importar el modelo de servicio
 
 // Modificar el controlador crearCita en controllers/cita.js
-//HolamundoPrueba
+
 const crearCita = async (req, res) => {
     try {
         const { 
