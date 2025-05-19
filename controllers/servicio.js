@@ -28,11 +28,15 @@ const serviciosGet = async (req, res = response) => {
 const serviciosPost = async (req, res = response) => {
   
     // El archivo de imagen debe venir en req.file
-  if (!req.file) {
-    return res.status(400).json({
-      msg: "La imagen es obligatoria.",
-    });
-  }
+  // if (!req.file) {
+  //   return res.status(400).json({
+  //     msg: "La imagen es obligatoria.",
+  //   });
+  // }
+
+  if (req.file) {
+  req.body.imagenUrl = req.file.filename;
+}
 
   const { error, value } = servicioSchema.validate(req.body, { abortEarly: false });
   
