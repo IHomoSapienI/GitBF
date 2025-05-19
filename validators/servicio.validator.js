@@ -114,11 +114,11 @@ const servicioSchema = Joi.object({
 
     imagenUrl: Joi.string()
   .trim()
-  .pattern(/\.(jpg|jpeg|png|gif|webp)$/i) // Solo revisa que tenga una extensión de imagen válida
+  .pattern(/\.(jpg|jpeg|png|gif|webp)$/i)
   .required()
   .messages({
     'string.empty': 'El campo imagenUrl es obligatorio.',
-    'string.pattern.base': 'El nombre del archivo debe tener una extensión de imagen válida (jpg, jpeg, png, gif, webp).',
+    'string.pattern.base': 'La imagen debe tener una extensión válida (jpg, jpeg, png, gif, webp).',
     'any.required': 'El campo imagenUrl es obligatorio.'
   }),
 
