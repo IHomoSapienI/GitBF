@@ -113,16 +113,15 @@ const servicioSchema = Joi.object({
         'any.invalid': 'Uno o más IDs de tipo de servicio no son válidos.', }),
 
     imagenUrl: Joi.string()
-    .trim()
-    .uri({ scheme: ['http', 'https'] }) // solo permite URLs con http o https
-    .pattern(/\.(jpg|jpeg|png|gif|webp)$/i) // extensión válida de imagen
-    .required()
-    .messages({
-        'string.empty': 'El campo imagenUrl es obligatorio.',
-        'string.uri': 'La URL de la imagen debe ser una dirección válida con http o https.',
-        'string.pattern.base': 'La URL debe terminar en una extensión de imagen válida (jpg, jpeg, png, gif, webp).',
-        'any.required': 'El campo imagenUrl es obligatorio.'
-    }),
+  .trim()
+  .pattern(/\.(jpg|jpeg|png|gif|webp)$/i) // Solo revisa que tenga una extensión de imagen válida
+  .required()
+  .messages({
+    'string.empty': 'El campo imagenUrl es obligatorio.',
+    'string.pattern.base': 'El nombre del archivo debe tener una extensión de imagen válida (jpg, jpeg, png, gif, webp).',
+    'any.required': 'El campo imagenUrl es obligatorio.'
+  }),
+
    
 
 
