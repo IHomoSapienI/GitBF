@@ -1,7 +1,7 @@
 const { response } = require("express")
 const Servicio = require("../modules/servicio")
 const TipoServicio = require("../modules/tiposerv")
-
+const servicioSchema = require("../validators/servicio.validator")
 // Obtener todos los servicios
 const serviciosGet = async (req, res = response) => {
   try {
