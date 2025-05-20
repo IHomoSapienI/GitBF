@@ -79,13 +79,20 @@ const servicioSchema = Joi.object({
     .min(1)
     .max(999999)
     .required()
-    .messages({
-      'number.base': 'El precio debe ser un número.',
-      'number.integer': 'El precio debe ser un número entero.',
-      'number.min': 'El precio no puede ser menor que 1.',
-      'number.max': 'El precio no puede ser mayor que 999999.',
-      'any.required': 'El precio es obligatorio.'
-    }),
+    .custom((value, helpers) => {
+    if (value.toString().toLowerCase().includes('e')) {
+      return helpers.error('number.noExponential');
+    }
+    return value;
+  })
+  .messages({
+    'number.base': 'El precio debe ser un número.',
+    'number.integer': 'El precio debe ser un número entero.',
+    'number.min': 'El precio no puede ser menor que 1.',
+    'number.max': 'El precio no puede ser mayor que 999999.',
+    'any.required': 'El precio es obligatorio.',
+    'number.noExponential': 'El precio no puede estar en notación científica.'
+  }),
 
   tiempo: Joi.number()
     .integer()
