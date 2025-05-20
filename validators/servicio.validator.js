@@ -16,14 +16,13 @@ const servicioSchema = Joi.object({
         .min(5)
         .max(50)
         .required()
-        .pattern(/^(?!.*(.)\1{2,})[a-zA-Z\s]+$/) // evita más de 2 letras consecutivas repetidas
+        .pattern(/a^(?!.*(.)\1{2,})[a-zA-Z\s]+$/) // evita más de 2 letras consecutivas repetidas
         .custom((value, helpers) => {
 
             // ❌ Validar que el nombre no contenga solo números
             if (/^\d+$/.test(value)) {
                 return helpers.error('any.invalid', { message: 'El nombre del servicio no puede ser solo números.' });
             }
-
             // ❌ Validar que no sea una cadena completamente repetida
             const repeated = (str) => {
                 const len = str.length;
