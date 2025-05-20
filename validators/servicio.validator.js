@@ -47,7 +47,7 @@ const servicioSchema = Joi.object({
         .min(5)
         .max(100)
         .required()
-        .pattern(/^(?!.*(.)\1{2,})[a-zA-Z\s&.,¡!¿?()]+$/) // evita más de 2 letras consecutivas repetidas
+        .pattern(/^[\p{L}\p{N}\s.,!?¡¿()&'"%-]+$/u)  // evita más de 2 letras consecutivas repetidas
         .custom((value, helpers) => {
 
             // ❌ Validar que la descripción no contenga solo números
