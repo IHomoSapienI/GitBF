@@ -1,7 +1,7 @@
 const { response } = require("express")
 const Servicio = require("../modules/servicio")
 const TipoServicio = require("../modules/tiposerv")
-const {servicioSchema} = require("../validators/servicio.validator")
+const {servicioSchema ,servicioUpdateSchema} = require("../validators/servicio.validator")
 const mongoose = require("mongoose")
 // Obtener todos los servicios
 const serviciosGet = async (req, res = response) => {
@@ -134,6 +134,7 @@ const serviciosPut = async (req, res = response) => {
 
   const { id } = req.params;
 
+  
   // Validar que id es válido
   if (!mongoose.Types.ObjectId.isValid(id)) {
     return res.status(400).json({ msg: "ID de servicio inválido." });
