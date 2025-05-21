@@ -73,6 +73,9 @@ const servicioSchema = Joi.object({
 
             return value;
         }, 'Validación personalizada'),
+
+
+        
         precio: Joi.number()
     .integer()
     .min(1)

@@ -25,6 +25,31 @@ const serviciosGet = async (req, res = response) => {
   }
 }
 
+//validar el Nombre de Servicio no este duplicado
+const validarNombreServicio = async (req ,res) => {
+  try {
+    const { nombreServicio } = req.body
+
+    // Verificar si el nombre del servicio ya existe
+    const servicioExistente = await Servicio.findOne({ nombreServicio })
+
+    if (servicioExistente) {
+      return res.status(400).json({
+        msg: "El nombre del servicio ya está en uso",
+      })
+    }
+
+    // Si no existe, continuar con la creación o actualización
+    return true
+  }catch (error){
+console.error(error);
+res.status(500).json({ error: "Erorr al valdar el nombre del servicio" });
+  }
+};
+
+
+
+
 // Crear un nuevo servicio
 const serviciosPost = async (req, res = response) => {
   
@@ -362,5 +387,6 @@ module.exports = {
   serviciosDelete,
   serviciosExportExcel,
   serviciosToggleEstado,
+  validarNombreServicio
 }
 
