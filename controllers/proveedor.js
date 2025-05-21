@@ -304,3 +304,4 @@ module.exports = {
     eliminarProveedor,
     cambiarEstadoProveedor
 };
+//R
