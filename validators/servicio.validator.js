@@ -11,21 +11,12 @@ const objectValidator = (value, helpers) => {
 }
 
 const servicioSchema = Joi.object({
-    nombreTipoServicio: Joi.string()
-  .trim()
-  .min(3)
-  .max(50)
-  .required()
-  .pattern(/^(?!.*([a-zA-ZáéíóúÁÉÍÓÚñÑ])\1{2,})([a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+)$/)
-  .messages({
-    'string.pattern.base': 'El nombre no debe contener más de dos letras iguales consecutivas.',
-    'string.base': 'El campo nombreTipoServicio debe ser una cadena de texto.',
-    'string.empty': 'El campo nombreTipoServicio no puede estar vacío.',
-    'string.min': 'El campo nombreTipoServicio debe tener al menos 3 caracteres.',
-    'string.max': 'El campo nombreTipoServicio no puede tener más de 50 caracteres.',
-    'any.required': 'El campo nombreTipoServicio es obligatorio.',
-  })
- // evita más de 2 letras consecutivas repetidas
+    nombreServicio: Joi.string()
+        .trim()
+        .min(5)
+        .max(50)
+        .required()
+        .pattern(/^(?!.*(.)\1{2,})[a-zA-Z\s&.,¡!¿?()]+$/) // evita más de 2 letras consecutivas repetidas
         .custom((value, helpers) => {
 
             // ❌ Validar que el nombre no contenga solo números
