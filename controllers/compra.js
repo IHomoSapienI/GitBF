@@ -2,7 +2,7 @@ const Compra = require('../modules/compra');
 const Proveedor = require('../modules/proveedor');
 const Insumo = require('../modules/insumo');
 const mongoose = require('mongoose');
-//prueba
+
 // Crear una nueva compra
 // Crear una nueva compra
 exports.crearCompra = async (req, res) => {
