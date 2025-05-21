@@ -19,29 +19,27 @@ const tipoServicioSchema = Joi.object({
   })
 
         .custom((value, helpers) => {
+  if (/^\d+$/.test(value)) {
+    return helpers.message('El nombre del servicio no puede ser solo números.');
+  }
 
-            // ❌ Validar que el nombre no contenga solo números
-            if (/^\d+$/.test(value)) {
-                return helpers.error('any.invalid', { message: 'El nombre del servicio no puede ser solo números.' });
-            }
-            // ❌ Validar que no sea una cadena completamente repetida
-            const repeated = (str) => {
-                const len = str.length;
-                for (let i = 1; i <= len / 2; i++) {
-                    const sub = str.slice(0, i);
-                    if (sub.repeat(len / i) === str) {
-                        return true;
-                    }
-                }
-                return false;
-            };
+  const repeated = (str) => {
+    const len = str.length;
+    for (let i = 1; i <= len / 2; i++) {
+      const sub = str.slice(0, i);
+      if (sub.repeat(len / i) === str) {
+        return true;
+      }
+    }
+    return false;
+  };
 
-            if (repeated(value)) {
-                return helpers.error('any.invalid', { message: 'El nombre del tipo de servicio no puede ser una cadena repetida.' });
-            }
+  if (repeated(value)) {
+    return helpers.message('El nombre del tipo de servicio no puede ser una cadena repetida.');
+  }
 
-            return value;
-        }, 'Validación personalizada'),
+  return value;
+}, 'Validación personalizada'),
     activo: Joi.boolean()
         .required()
         .messages({
