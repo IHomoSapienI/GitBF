@@ -46,7 +46,9 @@ router.use("/uploads", express.static("uploads"))
 
 // Rutas
 router.get("/", verificarPermisos(["verServicios"]), serviciosGet)
-router.get("/validar-nombre", verificarPermisos(["verServicios"]), validarNombreServicio) // Validar nombre de servicio
+router.get("/validar-nombre", verificarPermisos(["verServicios"]), validarNombreServicio);
+
+
 router.post("/", upload.single("imagen"), verificarPermisos(["crearServicios"]), serviciosPost)
 router.put("/:id", upload.single("imagen"), verificarPermisos(["actualizarServicios"]), serviciosPut) // Actualizar un servicio
 router.delete("/:id", verificarPermisos(["eliminarServicios"]), serviciosDelete)

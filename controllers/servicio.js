@@ -25,25 +25,29 @@ const serviciosGet = async (req, res = response) => {
   }
 }
 
-//validar el Nombre de Servicio no este duplicado
-const validarNombreServicio = async (req ,res) => {
+// Validar que el nombre del servicio no esté duplicado
+const validarNombreServicio = async (req, res) => {
   try {
-    const { nombreServicio } = req.body
+    const { nombre } = req.query;
 
-    // Verificar si el nombre del servicio ya existe
-    const servicioExistente = await Servicio.findOne({ nombreServicio })
-
-    if (servicioExistente) {
-      return res.status(400).json({
-        msg: "El nombre del servicio ya está en uso",
-      })
+    if (!nombre) {
+      return res.status(400).json({ msg: "El nombre es requerido." });
     }
 
-    // Si no existe, continuar con la creación o actualización
-    return true
-  }catch (error){
-console.error(error);
-res.status(500).json({ error: "Erorr al valdar el nombre del servicio" });
+    const servicioExistente = await Servicio.findOne({ nombreServicio: nombre.trim() });
+
+    if (servicioExistente) {
+      return res.status(409).json({
+        msg: "El nombre del servicio ya está en uso.",
+      });
+    }
+
+    // Nombre disponible
+    return res.status(200).json({ msg: "Nombre disponible." });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ msg: "Error al validar el nombre del servicio" });
   }
 };
 
