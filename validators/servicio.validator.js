@@ -120,7 +120,18 @@ const servicioSchema = Joi.object({
         'string.empty': 'El campo tipoServicio es obligatorio.',
         'array.base': 'El campo tipoServicio debe ser un arreglo de IDs de tipo de servicio.',
         'any.invalid': 'Uno o más IDs de tipo de servicio no son válidos.', }),
-
+tipoServicio2: Joi.alternatives()
+    .try(
+        Joi.string().custom(objectValidator, 'ID de tipo de servicio válido'),
+        Joi.array().items(
+            Joi.string().custom(objectValidator, 'ID de tipo de servicio válido')
+        )
+    )
+    .required()
+    .messages({
+        'string.empty': 'El campo tipoServicio es obligatorio.',
+        'array.base': 'El campo tipoServicio debe ser un arreglo de IDs de tipo de servicio.',
+        'any.invalid': 'Uno o más IDs de tipo de servicio no son válidos.', }),
     imagenUrl: Joi.string()
   .trim()
   .pattern(/\.(jpg|jpeg|png|gif|webp)$/i)

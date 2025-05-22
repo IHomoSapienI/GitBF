@@ -1,28 +1,51 @@
 const { response } = require("express")
 const Servicio = require("../modules/servicio")
 const TipoServicio = require("../modules/tiposerv")
+const TsSchema = require("../modules/tiposervicios")
 const {servicioSchema ,servicioUpdateSchema} = require("../validators/servicio.validator")
 const mongoose = require("mongoose")
 // Obtener todos los servicios
 const serviciosGet = async (req, res = response) => {
-  try {
-    const servicios = await Servicio.find().populate("tipoServicio", "nombreTs") // Poblamos el tipoServicio para obtener más detalles
+  
+   try {
+    const servicios = await Servicio.find()
+      .populate('tipoServicio', 'nombreTs descuento esPromocional activo')
+      .populate('tipoServicio2', 'nombreTipoServicio activo');
 
     if (servicios.length === 0) {
       return res.status(404).json({
         msg: "No se encontraron servicios en la base de datos",
-      })
+      });
     }
 
     res.json({
       servicios,
-    })
+    });
   } catch (error) {
-    console.log(error)
+    console.error(error);
     res.status(500).json({
       msg: "Error al obtener los servicios",
-    })
+    });
   }
+  
+  // try {
+  //   const servicios = await Servicio.find().populate("tipoServicio", "nombreTs") // Poblamos el tipoServicio para obtener más detalles
+
+  //   if (servicios.length === 0) {
+  //     return res.status(404).json({
+  //       msg: "No se encontraron servicios en la base de datos",
+  //     })
+  //   }
+
+  //   res.json({
+  //     servicios,
+  //   })
+  // } catch (error) {
+  //   console.log(error)
+  //   res.status(500).json({
+  //     msg: "Error al obtener los servicios",
+  //   })
+  // }
 }
 
 // Validar que el nombre del servicio no esté duplicado
@@ -77,7 +100,7 @@ const serviciosPost = async (req, res = response) => {
     });
   }
 
-  const { nombreServicio, descripcion, precio, tiempo, tipoServicio, estado } = value;
+  const { nombreServicio, descripcion, precio, tiempo, tipoServicio, tipoServicio2, estado } = value;
   const imagenUrl = req.file.filename; // nombre del archivo guardado
 
   try {
@@ -93,12 +116,26 @@ const serviciosPost = async (req, res = response) => {
       }
     }
 
+    // Verificar que tipoServicio2 exista en DB
+    if(tipoServicio2){
+      const tipos2 = Array.isArray(tipoServicio2) ? tipoServicio2 : [tipoServicio2];
+      for (const tipoId2 of tipos2){
+        const existeTipoServicio2 = await TsSchema.findById(tipoId2);
+        if (!existeTipoServicio2) {
+          return res.status(400).json({
+            msg: `El tipo de servicio con ID ${tipoId2} no existe.`,
+          });
+        }
+      }
+    }
+
     const servicio = new Servicio({
       nombreServicio,
       descripcion,
       precio,
       tiempo,
       tipoServicio,
+      tipoServicio2,
       estado,
       imagenUrl,
     });
@@ -172,7 +209,7 @@ const serviciosPut = async (req, res = response) => {
   // Validar solo los campos recibidos (parciales)
   // Para eso, podemos validar con `servicioSchema` pero con `.fork()` para hacer todo opcional
   const partialSchema = servicioSchema.fork(
-    ['nombreServicio', 'descripcion', 'precio', 'tiempo', 'tipoServicio', 'estado', 'imagenUrl'],
+    ['nombreServicio', 'descripcion', 'precio', 'tiempo', 'tipoServicio', 'tipoServicio2', 'estado', 'imagenUrl'],
     (schema) => schema.optional()
   );
 
@@ -210,6 +247,17 @@ const serviciosPut = async (req, res = response) => {
             msg: `El tipo de servicio con ID ${tipoId} no existe.`,
           });
         }
+      }
+    }
+
+
+    // Validar tipoServicio2 si viene en la actualización
+    if (value.tipoServicio2) {
+      const existeTipoServicio = await TsSchema.findById(value.tipoServicio2);
+      if (!existeTipoServicio) {
+        return res.status(400).json({
+          msg: `El tipo de servicio con ID ${value.tipoServicio2} no existe.`,
+        });
       }
     }
 
@@ -294,6 +342,7 @@ const serviciosExportExcel = async (req, res = response) => {
   try {
     // Obtener todos los servicios
     const servicios = await Servicio.find().populate("tipoServicio", "nombreTs")
+    .populate("tipoServicio2", "nombreTipoServicio");
 
     if (servicios.length === 0) {
       return res.status(404).json({
@@ -312,6 +361,8 @@ const serviciosExportExcel = async (req, res = response) => {
       { header: "Nombre", key: "nombre", width: 30 },
       { header: "Descripción", key: "descripcion", width: 40 },
       { header: "Tipo de Servicio", key: "tipoServicio", width: 20 },
+      { header: "Tipo de Servicio 2", key: "tipoServicio2", width: 20 },
+      
       { header: "Precio", key: "precio", width: 15 },
       { header: "Tiempo (min)", key: "tiempo", width: 15 },
       { header: "Estado", key: "estado", width: 15 },
@@ -332,6 +383,7 @@ const serviciosExportExcel = async (req, res = response) => {
         nombre: servicio.nombreServicio,
         descripcion: servicio.descripcion,
         tipoServicio: servicio.tipoServicio ? servicio.tipoServicio.nombreTs : "No definido",
+        tipoServicio2: servicio.tipoServicio2 ? servicio.tipoServicio2.nombreTipoServicio : "No definido",
         precio: Number.parseFloat(servicio.precio).toFixed(2),
         tiempo: servicio.tiempo,
         estado: servicio.estado ? "Activo" : "Inactivo",
