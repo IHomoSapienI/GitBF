@@ -53,12 +53,12 @@ const tipoDescuentoSchema = Joi.object({
             'number.min': 'El descuento no puede ser menor que 0.',
             'number.max': 'El descuento no puede ser mayor que 100.',
         })
-        .custom((value, helpers) => {
-    if (value !== 0 && /^0/.test(String(value))) {
-      return helpers.message('El descuento no puede comenzar con 0');
-    }
-    return value;
-  })
+  //       .custom((value, helpers) => {
+  //   if (value !== 0 && /^0/.test(String(value))) {
+  //     return helpers.message('El descuento no puede comenzar con 0');
+  //   }
+  //   return value;
+  // })
   .default(0)
   .messages({
     'number.base': 'El campo descuento debe ser un número.',
