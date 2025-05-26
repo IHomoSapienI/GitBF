@@ -4,14 +4,52 @@ const Insumo = require('../modules/insumo');
 const mongoose = require('mongoose');
 
 // Crear una nueva compra
-// Crear una nueva compra
 exports.crearCompra = async (req, res) => {
     try {
         const { proveedor, recibo, fechaCompra, estado, insumos } = req.body;
 
-        // Validar que los campos requeridos estén presentes
-        if (!proveedor || !recibo || !fechaCompra || !insumos || insumos.length === 0) {
-            return res.status(400).json({ mensaje: "Faltan campos requeridos o la lista de insumos está vacía." });
+        // Validaciones de campos requeridos
+        if (!proveedor || proveedor.trim() === "") {
+            return res.status(400).json({ mensaje: "Debe seleccionar un proveedor." });
+        }
+
+        if (!recibo || recibo.trim() === "") {
+            return res.status(400).json({ mensaje: "Debe ingresar el número de recibo." });
+        }
+
+        if (!fechaCompra) {
+            return res.status(400).json({ mensaje: "La fecha de compra es requerida." });
+        }
+
+        const fechaActual = new Date();
+        const fechaCompraDate = new Date(fechaCompra);
+
+        if (isNaN(fechaCompraDate.getTime())) {
+            return res.status(400).json({ mensaje: "Formato de fecha inválido." });
+        }
+
+        if (fechaCompraDate > fechaActual) {
+            return res.status(400).json({ mensaje: "La fecha de compra no puede ser futura." });
+        }
+
+        if (!insumos || !Array.isArray(insumos) || insumos.length === 0) {
+            return res.status(400).json({ mensaje: "Debe agregar al menos un insumo." });
+        }
+
+        for (let item of insumos) {
+            const { insumo, cantidad } = item;
+
+            if (!insumo) {
+                return res.status(400).json({ mensaje: "Falta seleccionar un insumo." });
+            }
+
+            if (typeof cantidad !== 'number' || isNaN(cantidad)) {
+                return res.status(400).json({ mensaje: "La cantidad debe ser un número." });
+            }
+
+            if (cantidad <= 0) {
+                return res.status(400).json({ mensaje: "La cantidad debe ser mayor que cero." });
+            }
         }
 
         // Verificar si el proveedor existe
@@ -21,13 +59,13 @@ exports.crearCompra = async (req, res) => {
         }
 
         // Convertir los IDs de los insumos a ObjectId
-        const insumoIds = insumos.map(item => new  mongoose.Types.ObjectId(item.insumo));
+        const insumoIds = insumos.map(item => new mongoose.Types.ObjectId(item.insumo));
 
         // Buscar los insumos en la base de datos
         const insumosExistentes = await Insumo.find({ _id: { $in: insumoIds } });
 
         // Identificar los insumos faltantes
-        const insumosFaltantes = insumos.filter(item => 
+        const insumosFaltantes = insumos.filter(item =>
             !insumosExistentes.some(insumo => insumo._id.equals(item.insumo))
         );
 
@@ -100,7 +138,6 @@ exports.obtenerCompraPorId = async (req, res) => {
 };
 
 // Actualizar una compra
-// Actualizar una compra
 exports.actualizarCompra = async (req, res) => {
     try {
         const { proveedor, recibo, fechaCompra, estado, insumos } = req.body;
@@ -109,7 +146,22 @@ exports.actualizarCompra = async (req, res) => {
             return res.status(400).json({ mensaje: 'No se proporcionaron insumos para la compra' });
         }
 
-        // Verificar que el proveedor existe
+        for (let item of insumos) {
+            const { insumo, cantidad } = item;
+
+            if (!insumo) {
+                return res.status(400).json({ mensaje: "Falta seleccionar un insumo." });
+            }
+
+            if (typeof cantidad !== 'number' || isNaN(cantidad)) {
+                return res.status(400).json({ mensaje: "La cantidad debe ser un número." });
+            }
+
+            if (cantidad <= 0) {
+                return res.status(400).json({ mensaje: "La cantidad debe ser mayor que cero." });
+            }
+        }
+
         if (proveedor) {
             const proveedorExistente = await Proveedor.findById(proveedor);
             if (!proveedorExistente) {
@@ -117,9 +169,8 @@ exports.actualizarCompra = async (req, res) => {
             }
         }
 
-        // Verificar que los insumos existen
         const insumosExistentes = await Insumo.find({ _id: { $in: insumos.map(item => item.insumo) } });
-        const insumosFaltantes = insumos.filter(item => 
+        const insumosFaltantes = insumos.filter(item =>
             !insumosExistentes.some(insumo => insumo._id.equals(item.insumo))
         );
 
@@ -130,7 +181,6 @@ exports.actualizarCompra = async (req, res) => {
             });
         }
 
-        // Calcular el nuevo monto total
         const montoTotal = insumos.reduce((total, item) => {
             const insumoEncontrado = insumosExistentes.find(insumo => insumo._id.equals(item.insumo));
             return total + (insumoEncontrado.precio * item.cantidad);
@@ -151,7 +201,6 @@ exports.actualizarCompra = async (req, res) => {
         return res.status(500).json({ mensaje: 'Error al actualizar la compra', error: error.message });
     }
 };
-
 
 // Eliminar una compra
 exports.eliminarCompra = async (req, res) => {
