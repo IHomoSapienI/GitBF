@@ -394,3 +394,4 @@ module.exports = {
   verificarInsumoExistente,
   incrementarStockInsumo,
 }
+//prueba
