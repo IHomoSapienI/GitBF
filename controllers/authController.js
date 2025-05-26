@@ -13,15 +13,14 @@ const transporter = nodemailer.createTransport({
     pass: process.env.EMAIL_PASSWORD,
   },
   tls: {
-    rejectUnauthorized: false, // Solo para desarrollo
+    rejectUnauthorized: false,
   },
 })
 
-// Verificación mejorada
+// Verificación mejorada del transporter
 transporter.verify((error, success) => {
   if (error) {
     console.error("Error al configurar el correo:", error)
-    throw new Error("Error al configurar el servicio de correo")
   } else {
     console.log("Servidor de correo listo")
   }
@@ -30,20 +29,13 @@ transporter.verify((error, success) => {
 const login = async (req, res) => {
   const { email, password } = req.body
 
-  console.log("Inicio de sesión - Email:", email)
-
   try {
     const user = await User.findOne({ email }).populate("rol")
     if (!user) {
-      console.log("Usuario no encontrado")
       return res.status(400).json({ message: "Credenciales inválidas" })
     }
 
-    console.log("Usuario encontrado:", JSON.stringify(user, null, 2))
-
-    // Verificar si el usuario está activo
     if (!user.estado) {
-      console.log("Usuario inactivo:", user.email)
       return res.status(401).json({
         message: "Tu cuenta ha sido desactivada. Por favor, contacta al administrador.",
         cuentaInactiva: true,
@@ -51,26 +43,22 @@ const login = async (req, res) => {
     }
 
     const isMatch = await bcrypt.compare(password.trim(), user.password)
-    console.log("Resultado de bcrypt.compare:", isMatch)
-
     if (!isMatch) {
-      console.log("Contraseña incorrecta")
       return res.status(400).json({ message: "Credenciales inválidas" })
     }
 
-    // Verificar si el rol está activo
     if (!user.rol.estadoRol) {
-      console.log("Rol desactivado:", user.rol.nombreRol)
       return res.status(403).json({
         message: "Tu rol ha sido desactivado. Contacta al administrador.",
         rolDesactivado: true,
       })
     }
 
-    const token = jwt.sign({ userId: user._id, role: user.rol.nombreRol }, process.env.JWT_SECRET || "secret_key", {
-      expiresIn: "1h",
-    })
-    console.log("Token generado:", token)
+    const token = jwt.sign(
+      { userId: user._id, role: user.rol.nombreRol }, 
+      process.env.JWT_SECRET || "secret_key", 
+      { expiresIn: "1h" }
+    )
 
     res.json({
       token,
@@ -90,83 +78,67 @@ const login = async (req, res) => {
 const register = async (req, res) => {
   const { nombre, apellido, email, password, confirmPassword, rol, estado, celular } = req.body
 
-  console.log("Registro - Datos recibidos:", { nombre, email, rol, estado })
-
   try {
-    // Validar campos obligatorios
+    // Validaciones mejoradas
     if (!nombre || !apellido || !email || !password || !confirmPassword || !celular) {
-      console.log("Faltan campos obligatorios")
       return res.status(400).json({
-        msg: "Faltan campos obligatorios (nombre, apellido, email, password, confirmPassword, celular)",
+        msg: "Faltan campos obligatorios",
       })
     }
 
     if (password !== confirmPassword) {
-      console.log("Las contraseñas no coinciden")
       return res.status(400).json({
         msg: "Las contraseñas no coinciden",
       })
     }
 
-    const userExists = await User.findOne({ email })
+    // Validación de formato de email
+    const emailRegex = /^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/
+    if (!emailRegex.test(email.toLowerCase())) {
+      return res.status(400).json({
+        msg: "Formato de email inválido",
+      })
+    }
+
+    const userExists = await User.findOne({ email: email.toLowerCase() })
     if (userExists) {
-      console.log("El usuario ya existe:", email)
       return res.status(400).json({ message: "El usuario ya existe" })
     }
 
     let rolId
     if (rol) {
       const existeRol = await Rol.findById(rol)
-      if (!existeRol) {
-        console.log("El rol especificado no es válido:", rol)
+      if (!existeRol || !existeRol.estadoRol) {
         return res.status(400).json({
-          msg: "El rol especificado no es válido",
+          msg: "El rol especificado no es válido o está desactivado",
         })
       }
-
-      // Verificar si el rol está activo
-      if (!existeRol.estadoRol) {
-        console.log("Rol desactivado:", existeRol.nombreRol)
-        return res.status(403).json({
-          msg: "El rol seleccionado está desactivado. Por favor, selecciona otro rol.",
-          rolDesactivado: true,
-        })
-      }
-
       rolId = rol
     } else {
       const defaultRol = await Rol.findOne({ nombreRol: "Cliente" })
-
-      // Verificar si el rol por defecto está activo
-      if (!defaultRol.estadoRol) {
-        console.log("Rol por defecto desactivado:", defaultRol.nombreRol)
+      if (!defaultRol || !defaultRol.estadoRol) {
         return res.status(403).json({
-          msg: "El rol por defecto está desactivado. Por favor, contacta al administrador.",
-          rolDesactivado: true,
+          msg: "El rol por defecto está desactivado. Contacta al administrador.",
         })
       }
-
       rolId = defaultRol._id
     }
 
     const newUser = await createUser({
       nombre,
       apellido,
-      email,
+      email: email.toLowerCase(),
       password,
       rol: rolId,
       estado,
       celular,
     })
 
-    console.log("Usuario guardado en la base de datos:", JSON.stringify(newUser, null, 2))
-
     const token = jwt.sign(
       { userId: newUser._id, role: newUser.rol.nombreRol },
       process.env.JWT_SECRET || "secret_key",
-      { expiresIn: "1h" },
+      { expiresIn: "1h" }
     )
-    console.log("Token generado:", token)
 
     res.json({
       token,
@@ -183,26 +155,43 @@ const register = async (req, res) => {
   }
 }
 
-// Solicitar restablecimiento de contraseña
-// En la función requestPasswordReset:
+// FUNCIÓN MEJORADA: Solicitar restablecimiento de contraseña
 const requestPasswordReset = async (req, res) => {
   const { email } = req.body
 
-  console.log("Solicitud de restablecimiento de contraseña para:", email)
-
   try {
-    const user = await User.findOne({ email }).populate("rol")
-    if (!user) {
-      console.log("Usuario no encontrado para restablecimiento de contraseña:", email)
-      return res.status(200).json({
-        message: "Si el correo existe en nuestra base de datos, recibirás un código para restablecer tu contraseña.",
+    // Validación de entrada
+    if (!email) {
+      return res.status(400).json({
+        message: "El email es obligatorio"
       })
     }
 
-    if (!user.estado) {
-      console.log("Usuario inactivo solicitando restablecimiento:", email)
-      return res.status(200).json({
-        message: "Si el correo existe en nuestra base de datos, recibirás un código para restablecer tu contraseña.",
+    // Validación de formato de email
+    const emailRegex = /^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/
+    if (!emailRegex.test(email.toLowerCase())) {
+      return res.status(400).json({
+        message: "Formato de email inválido"
+      })
+    }
+
+    const user = await User.findOne({ email: email.toLowerCase() }).populate("rol")
+    
+    // Respuesta genérica por seguridad (no revelar si el email existe)
+    const genericResponse = {
+      message: "Si el correo existe en nuestra base de datos, recibirás un código para restablecer tu contraseña.",
+      email: email.toLowerCase()
+    }
+
+    if (!user || !user.estado) {
+      return res.status(200).json(genericResponse)
+    }
+
+    // Verificar si ya existe un token válido reciente (evitar spam)
+    if (user.resetPasswordExpires && user.resetPasswordExpires > Date.now()) {
+      const timeLeft = Math.ceil((user.resetPasswordExpires - Date.now()) / 60000)
+      return res.status(429).json({
+        message: `Ya se envió un código recientemente. Espera ${timeLeft} minutos antes de solicitar otro.`
       })
     }
 
@@ -210,15 +199,15 @@ const requestPasswordReset = async (req, res) => {
     const resetToken = Math.floor(100000 + Math.random() * 900000).toString()
     
     // Guardar token hasheado y fecha de expiración (15 minutos)
-    user.resetPasswordToken = await bcrypt.hash(resetToken, 10)
+    const salt = await bcrypt.genSalt(10)
+    user.resetPasswordToken = await bcrypt.hash(resetToken, salt)
     user.resetPasswordExpires = Date.now() + 900000 // 15 minutos
 
     await user.save({ validateBeforeSave: false })
 
-    console.log("Token de restablecimiento generado para:", email)
-
+    // Configuración del email mejorada
     const mailOptions = {
-      from: process.env.EMAIL_USER,
+      from: `"NailsSoft" <${process.env.EMAIL_USER}>`,
       to: user.email,
       subject: "Código de verificación para restablecer contraseña",
       html: `<!DOCTYPE html>
@@ -228,68 +217,41 @@ const requestPasswordReset = async (req, res) => {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Código de verificación</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      line-height: 1.6;
-      color: #333;
-      margin: 0;
-      padding: 0;
-    }
-    .container {
-      max-width: 600px;
-      margin: 0 auto;
-      padding: 20px;
-      border: 1px solid #e1e1e1;
-      border-radius: 5px;
-    }
-    .header {
-      text-align: center;
-      padding: 20px 0;
-      border-bottom: 1px solid #e1e1e1;
-    }
-    .content {
-      padding: 20px 0;
-    }
-    .code {
-      font-size: 24px;
-      letter-spacing: 3px;
-      text-align: center;
-      margin: 20px 0;
-      padding: 15px;
-      background-color: #f5f5f5;
-      border-radius: 5px;
-      font-weight: bold;
-    }
-    .footer {
-      text-align: center;
-      padding-top: 20px;
-      border-top: 1px solid #e1e1e1;
-      font-size: 12px;
-      color: #777;
-    }
-    .logo {
-      max-width: 150px;
-      margin-bottom: 10px;
-    }
+    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e1e1e1; border-radius: 5px; }
+    .header { text-align: center; padding: 20px 0; border-bottom: 1px solid #e1e1e1; }
+    .content { padding: 20px 0; }
+    .code { font-size: 32px; letter-spacing: 5px; text-align: center; margin: 20px 0; padding: 20px; background-color: #f8f9fa; border: 2px dashed #007bff; border-radius: 8px; font-weight: bold; color: #007bff; }
+    .footer { text-align: center; padding-top: 20px; border-top: 1px solid #e1e1e1; font-size: 12px; color: #777; }
+    .warning { background-color: #fff3cd; border: 1px solid #ffeaa7; padding: 10px; border-radius: 4px; margin: 15px 0; }
   </style>
 </head>
 <body>
   <div class="container">
     <div class="header">
-      <img src="https://gitbf.onrender.com/uploads/logo1.png" alt="NailsSoft Logo" class="logo">
+      <img src="https://gitbf.onrender.com/uploads/logo1.png" alt="NailsSoft Logo" style="max-width: 150px;">
       <h1>NailsSoft</h1>
     </div>
     <div class="content">
       <h2>Código de verificación</h2>
-      <p>Hola,</p>
-      <p>Recibimos una solicitud para restablecer la contraseña de tu cuenta. Usa el siguiente código para verificar tu identidad:</p>
+      <p>Hola <strong>${user.nombre}</strong>,</p>
+      <p>Recibimos una solicitud para restablecer la contraseña de tu cuenta. Usa el siguiente código:</p>
       
       <div class="code">${resetToken}</div>
       
-      <p>Este código expirará en 15 minutos. Si no solicitaste este cambio, puedes ignorar este correo.</p>
+      <div class="warning">
+        <strong>⚠️ Importante:</strong>
+        <ul>
+          <li>Este código expira en <strong>15 minutos</strong></li>
+          <li>Solo úsalo si solicitaste el cambio</li>
+          <li>Nunca compartas este código con nadie</li>
+        </ul>
+      </div>
+      
+      <p>Si no solicitaste este cambio, ignora este correo y tu cuenta permanecerá segura.</p>
     </div>
     <div class="footer">
-      <p>Este es un correo electrónico automático, por favor no respondas a este mensaje.</p>
+      <p>Este es un correo automático, no respondas a este mensaje.</p>
       <p>&copy; ${new Date().getFullYear()} NailsSoft. Todos los derechos reservados.</p>
     </div>
   </div>
@@ -297,57 +259,85 @@ const requestPasswordReset = async (req, res) => {
 </html>`,
     }
 
-    await transporter.sendMail(mailOptions)
-    console.log("Correo con código de verificación enviado a:", email)
+    // Enviar email con manejo de errores mejorado
+    try {
+      await transporter.sendMail(mailOptions)
+      console.log(`Código de verificación enviado a: ${email}`)
+    } catch (emailError) {
+      console.error("Error al enviar email:", emailError)
+      // Limpiar token si falla el envío
+      user.resetPasswordToken = undefined
+      user.resetPasswordExpires = undefined
+      await user.save({ validateBeforeSave: false })
+      
+      return res.status(500).json({
+        message: "Error al enviar el correo. Intenta nuevamente."
+      })
+    }
 
-    res.status(200).json({
-      message: "Se ha enviado un código de verificación a tu correo electrónico.",
-      email: user.email // Enviamos el email para usarlo en la verificación
-    })
+    res.status(200).json(genericResponse)
   } catch (error) {
-    console.error("Error al solicitar restablecimiento de contraseña:", error)
+    console.error("Error al solicitar restablecimiento:", error)
     res.status(500).json({ message: "Error en el servidor" })
   }
 }
 
-// En la función verifyResetToken:
+// FUNCIÓN MEJORADA: Verificar token de restablecimiento
 const verifyResetToken = async (req, res) => {
   const { token, email } = req.body
 
-  console.log("Verificando token de restablecimiento:", token, "para email:", email)
-
   try {
-    // Buscar usuario por email con token válido y no expirado
+    // Validaciones de entrada
+    if (!token || !email) {
+      return res.status(400).json({ 
+        message: "Token y email son obligatorios" 
+      })
+    }
+
+    // Validar formato del token
+    if (!/^\d{6}$/.test(token)) {
+      return res.status(400).json({ 
+        message: "El código debe tener exactamente 6 dígitos" 
+      })
+    }
+
+    // Buscar usuario con token válido y no expirado
     const user = await User.findOne({
-      email,
+      email: email.toLowerCase(),
+      resetPasswordToken: { $exists: true },
       resetPasswordExpires: { $gt: Date.now() }
     })
 
     if (!user) {
-      console.log("Usuario no encontrado o token expirado")
-      return res.status(400).json({ message: "El código ha expirado o es inválido" })
+      return res.status(400).json({ 
+        message: "El código ha expirado o es inválido" 
+      })
     }
 
     // Verificar que el token coincida
     const isValid = await bcrypt.compare(token, user.resetPasswordToken)
-
     if (!isValid) {
-      console.log("Token no coincide")
-      return res.status(400).json({ message: "Código incorrecto" })
+      return res.status(400).json({ 
+        message: "Código incorrecto" 
+      })
     }
 
-    console.log("Token verificado correctamente para usuario:", user.email)
-    
-    // Generar un token temporal para permitir el restablecimiento
+    // Generar token temporal para autorizar el restablecimiento
     const tempToken = jwt.sign(
-      { userId: user._id, resetVerified: true },
+      { 
+        userId: user._id, 
+        resetVerified: true,
+        email: user.email 
+      },
       process.env.JWT_SECRET || "secret_key",
       { expiresIn: "15m" }
     )
 
+    console.log(`Token verificado correctamente para: ${user.email}`)
+
     res.status(200).json({ 
       message: "Código verificado correctamente",
-      resetToken: tempToken // Token temporal para autorizar el restablecimiento
+      resetToken: tempToken
     })
   } catch (error) {
     console.error("Error al verificar token:", error)
@@ -355,63 +345,103 @@ const verifyResetToken = async (req, res) => {
   }
 }
 
-// En la función resetPassword:
+// FUNCIÓN MEJORADA: Restablecer contraseña
 const resetPassword = async (req, res) => {
-  const { token, password, confirmPassword } = req.body;
-
-  console.log("Restableciendo contraseña con token de autorización");
+  const { token, password, confirmPassword } = req.body
 
   try {
-    // Verificar el token temporal primero
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || "secret_key");
-    if (!decoded.resetVerified) {
-      return res.status(401).json({ message: "Autorización inválida" });
+    // Validaciones de entrada
+    if (!token || !password || !confirmPassword) {
+      return res.status(400).json({ 
+        message: "Todos los campos son obligatorios" 
+      })
     }
 
-    // Buscar usuario por ID del token
-    const user = await User.findById(decoded.userId);
-    if (!user) {
-      console.log("Usuario no encontrado");
-      return res.status(400).json({ message: "Usuario no encontrado" });
-    }
-
-    // Validar que las contraseñas coincidan
     if (password !== confirmPassword) {
-      console.log("Las contraseñas no coinciden");
-      return res.status(400).json({ message: "Las contraseñas no coinciden" });
+      return res.status(400).json({ 
+        message: "Las contraseñas no coinciden" 
+      })
+    }
+
+    // Validaciones de contraseña
+    if (password.length < 8 || password.length > 64) {
+      return res.status(400).json({ 
+        message: "La contraseña debe tener entre 8 y 64 caracteres" 
+      })
+    }
+
+    if (/\s/.test(password)) {
+      return res.status(400).json({ 
+        message: "La contraseña no puede contener espacios" 
+      })
+    }
+
+    // Verificar el token temporal
+    let decoded
+    try {
+      decoded = jwt.verify(token, process.env.JWT_SECRET || "secret_key")
+    } catch (jwtError) {
+      if (jwtError.name === "TokenExpiredError") {
+        return res.status(401).json({ 
+          message: "La sesión de restablecimiento ha expirado",
+          expired: true 
+        })
+      }
+      return res.status(401).json({ 
+        message: "Token de autorización inválido",
+        invalidToken: true 
+      })
+    }
+
+    if (!decoded.resetVerified) {
+      return res.status(401).json({ 
+        message: "Autorización inválida" 
+      })
+    }
+
+    // Buscar usuario
+    const user = await User.findById(decoded.userId)
+    if (!user) {
+      return res.status(400).json({ 
+        message: "Usuario no encontrado" 
+      })
+    }
+
+    // Verificar que el usuario esté activo
+    if (!user.estado) {
+      return res.status(403).json({ 
+        message: "La cuenta está desactivada" 
+      })
     }
 
     // Hashear y guardar nueva contraseña
-    const salt = await bcrypt.genSalt(10);
-    user.password = await bcrypt.hash(password, salt);
-    user.resetPasswordToken = undefined;
-    user.resetPasswordExpires = undefined;
+    const salt = await bcrypt.genSalt(12)
+    user.password = await bcrypt.hash(password, salt)
+    
+    // Limpiar tokens de restablecimiento
+    user.resetPasswordToken = undefined
+    user.resetPasswordExpires = undefined
 
-    await user.save();
+    await user.save()
 
-    console.log("Contraseña restablecida correctamente para:", user.email);
+    console.log(`Contraseña restablecida correctamente para: ${user.email}`)
 
-    res.status(200).json({ message: "Contraseña restablecida correctamente" });
+    res.status(200).json({ 
+      message: "Contraseña restablecida correctamente" 
+    })
   } catch (error) {
-    console.error("Error al restablecer contraseña:", error);
-    if (error.name === "TokenExpiredError") {
-      return res.status(401).json({ message: "La sesión de restablecimiento ha expirado" });
-    }
-    if (error.name === "JsonWebTokenError") {
-      return res.status(401).json({ message: "Token de autorización inválido" });
-    }
+    console.error("Error al restablecer contraseña:", error)
     res.status(500).json({ 
       message: "Error en el servidor",
-      error: error.message 
-    });
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    })
   }
-};
+}
 
-// Añade la función a los exports
 module.exports = {
   login,
   register,
   requestPasswordReset,
-  resetPassword,
   verifyResetToken,
+  resetPassword,
 }
