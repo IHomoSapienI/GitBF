@@ -740,56 +740,52 @@ const activateAccount = async (req, res = response) => {
 // Añadir esta nueva función al final del archivo, antes del module.exports
 // Activar/Desactivar un usuario
 const usuariosToggleEstado = async (req, res = response) => {
-  const { id } = req.params
+  const { id } = req.params;
 
   try {
-    // Verificar si el usuario existe
-    const usuario = await Usuario.findById(id)
+    // Verificar si el usuario existe y popular el campo rol
+    const usuario = await Usuario.findById(id).populate("rol");
     if (!usuario) {
       return res.status(404).json({
         msg: "Usuario no encontrado",
-      })
+      });
     }
 
-    if (rol.nombreRol === "Admin") {
+    // Validar si el rol es Admin
+    if (usuario.rol && usuario.rol.nombreRol === "Admin") {
       return res.status(403).json({
-        msg: "No se puede cambiar el estado del usuario Administrador",
-      })
+        msg: "No está permitido desactivar o cambiar el estado de un administrador",
+      });
     }
 
     // Cambiar el estado sin modificar otros campos
-    const nuevoEstado = !usuario.estado
+    const nuevoEstado = !usuario.estado;
 
     // Actualizar solo el campo estado
-    await Usuario.findByIdAndUpdate(id, { estado: nuevoEstado })
-
-    // Obtener el rol para actualizar las colecciones relacionadas
-    const rol = await Rol.findById(usuario.rol)
+    await Usuario.findByIdAndUpdate(id, { estado: nuevoEstado });
 
     // Si el usuario es un cliente o empleado, actualizar también su estado en esas colecciones
-    if (rol) {
-      if (rol.nombreRol === "Cliente") {
-        await Cliente.findOneAndUpdate({ usuario: id }, { estadocliente: nuevoEstado })
-      } else if (rol.nombreRol === "Empleado") {
-        await Empleado.findOneAndUpdate({ usuario: id }, { estadoempleado: nuevoEstado })
-      }
+    if (usuario.rol.nombreRol === "Cliente") {
+      await Cliente.findOneAndUpdate({ usuario: id }, { estadocliente: nuevoEstado });
+    } else if (usuario.rol.nombreRol === "Empleado") {
+      await Empleado.findOneAndUpdate({ usuario: id }, { estadoempleado: nuevoEstado });
     }
 
     // Obtener el usuario actualizado para la respuesta
-    const usuarioActualizado = await Usuario.findById(id).select("-password")
+    const usuarioActualizado = await Usuario.findById(id).select("-password");
 
     res.json({
       msg: `Usuario ${nuevoEstado ? "activado" : "desactivado"} correctamente`,
       usuario: usuarioActualizado,
-    })
+    });
   } catch (error) {
-    console.error("Error al cambiar estado del usuario:", error)
+    console.error("Error al cambiar estado del usuario:", error);
     res.status(500).json({
       msg: "Error al cambiar estado del usuario",
       error: error.message,
-    })
+    });
   }
-}
+};
 
 // Asegúrate de exportar la nueva función
 module.exports = {
