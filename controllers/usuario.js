@@ -751,6 +751,12 @@ const usuariosToggleEstado = async (req, res = response) => {
       })
     }
 
+    if (rol.nombreRol === "Admin") {
+      return res.status(403).json({
+        msg: "No se puede cambiar el estado del usuario Administrador",
+      })
+    }
+
     // Cambiar el estado sin modificar otros campos
     const nuevoEstado = !usuario.estado
 
