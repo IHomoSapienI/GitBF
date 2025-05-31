@@ -16,7 +16,8 @@ router.use(validarJWT)
 router.use(verificarRolActivo)
 
 // Rutas para permisos con permisos específicos
-router.get("/", verificarPermisos(["verPermisos"]), permisosGet)
+// router.get("/", verificarPermisos(["verPermisos"]), permisosGet)
+router.get("/", permisosGet)
 router.post("/", verificarPermisos(["crearPermisos"]), permisosPost)
 router.put("/:id", verificarPermisos(["actualizarPermisos"]), permisosPut)
 router.delete("/:id", verificarPermisos(["eliminarPermisos"]), permisosDelete)
