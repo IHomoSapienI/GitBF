@@ -141,6 +141,16 @@ const register = async (req, res) => {
       celular,
     })
 
+    if (newUser.rol.nombreRol === "Cliente"){
+     await Cliente.create({
+    nombrecliente: newUser.nombre,
+    apellidocliente: newUser.apellido,
+    correocliente: newUser.email,
+    celularcliente: newUser.celular,
+    estadocliente: true,
+  })
+    }
+
     // Generar token
     const token = jwt.sign(
       { userId: newUser._id, role: newUser.rol.nombreRol },
