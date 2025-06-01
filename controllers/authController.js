@@ -1,6 +1,8 @@
 const bcrypt = require("bcryptjs")
 const jwt = require("jsonwebtoken")
 const User = require("../modules/usuario")
+const Cliente = require("../modules/cliente") // Agregar esta importación
+const Empleado = require("../modules/empleado") // Añadimos esta importación
 const Rol = require("../modules/rol")
 const { createUser } = require("../controllers/userHelper")
 const nodemailer = require("nodemailer")
@@ -88,7 +90,7 @@ const login = async (req, res) => {
 }
 
 const register = async (req, res) => {
-  const { nombre, apellido, email, password, confirmPassword, rol, estado, celular } = req.body
+  const { nombre, apellido, email, password, confirmPassword, rol, estado, celular, especialidad, salario } = req.body
 
   try {
     // Validaciones básicas
@@ -105,75 +107,84 @@ const register = async (req, res) => {
     }
 
     // Verificar si el usuario ya existe
-    const userExists = await User.findOne({ email: email.toLowerCase().trim() })
+    const userExists = await User.findOne({ $or: [{ correo: email }, { email }] })
     if (userExists) {
       return res.status(400).json({ message: "El usuario ya existe" })
     }
 
-    // Verificar si el correo ya existe en la tabla de clientes
-    const clienteExists = await Cliente.findOne({ correocliente: email.toLowerCase().trim() })
-    if (clienteExists) {
-      return res.status(400).json({ message: "El correo ya está registrado como cliente" })
-    }
-
-    // Verificar si el celular ya existe en la tabla de clientes
-    const celularExists = await Cliente.findOne({ celularcliente: celular })
-    if (celularExists) {
-      return res.status(400).json({ message: "El celular ya está registrado como cliente" })
-    }
-
     // Manejar rol
-    let rolId
+    let rolId, rolObj
     if (rol) {
-      const existeRol = await Rol.findById(rol)
-      if (!existeRol || !existeRol.estadoRol) {
+      rolObj = await Rol.findById(Array.isArray(rol) ? rol[0] : rol)
+      if (!rolObj || !rolObj.estadoRol) {
         return res.status(400).json({
           message: "El rol especificado no es válido o está desactivado",
         })
       }
-      rolId = rol
+      rolId = rolObj._id
     } else {
-      const defaultRol = await Rol.findOne({ nombreRol: "Cliente" })
-      if (!defaultRol || !defaultRol.estadoRol) {
+      rolObj = await Rol.findOne({ nombreRol: "Cliente" })
+      if (!rolObj || !rolObj.estadoRol) {
         return res.status(400).json({
           message: "El rol por defecto no está disponible. Contacta al administrador.",
         })
       }
-      rolId = defaultRol._id
+      rolId = rolObj._id
     }
 
     // Crear usuario
     const newUser = await createUser({
       nombre,
       apellido,
-      email: email.toLowerCase().trim(),
+      correo: email,
+      email,
       password,
       rol: rolId,
       estado: estado !== undefined ? estado : true,
       celular,
     })
 
-    // Crear cliente automáticamente después de crear el usuario
-    try {
-      const nuevoCliente = new Cliente({
-        nombrecliente: nombre,
-        apellidocliente: apellido,
-        correocliente: email.toLowerCase().trim(),
-        celularcliente: celular,
-        estadocliente: estado !== undefined ? estado : true
-      })
+    // Asociar con Cliente o Empleado según el rol
+    if (rolObj.nombreRol === 'Cliente') {
+      const clienteExistente = await Cliente.findOne({ usuario: newUser._id })
+      if (!clienteExistente) {
+        await new Cliente({
+          nombrecliente: nombre,
+          apellidocliente: apellido,
+          correocliente: email,
+          celularcliente: celular,
+          estadocliente: estado !== undefined ? estado : true,
+          usuario: newUser._id,
+        }).save()
+        console.log(`Cliente creado automáticamente para el usuario: ${email}`)
+      }
+      // Eliminar cualquier registro de empleado para evitar duplicidad
+      await Empleado.deleteMany({ usuario: newUser._id })
+    }
 
-      await nuevoCliente.save()
-      console.log(`Cliente creado automáticamente para el usuario: ${email}`)
-    } catch (clienteError) {
-      console.error("Error al crear cliente automáticamente:", clienteError)
-      // Opcional: podrías decidir si eliminar el usuario creado o continuar
-      // En este caso, continuamos pero registramos el error
+    if (rolObj.nombreRol === 'Empleado') {
+      const empleadoExistente = await Empleado.findOne({ usuario: newUser._id })
+      if (!empleadoExistente) {
+        await new Empleado({
+          nombreempleado: nombre,
+          apellidoempleado: apellido,
+          correoempleado: email,
+          celularempleado: celular,
+          telefonoempleado: celular,
+          estadoempleado: estado !== undefined ? estado : true,
+          especialidad: especialidad || 'General',
+          salario: salario || 0,
+          usuario: newUser._id,
+        }).save()
+        console.log(`Empleado creado automáticamente para el usuario: ${email}`)
+      }
+      // Eliminar cualquier registro de cliente para evitar duplicidad
+      await Cliente.deleteMany({ usuario: newUser._id })
     }
 
     // Generar token
     const token = jwt.sign(
-      { userId: newUser._id, role: newUser.rol.nombreRol },
+      { userId: newUser._id, role: rolObj.nombreRol },
       process.env.JWT_SECRET || "secret_key",
       { expiresIn: "24h" },
     )
@@ -181,13 +192,13 @@ const register = async (req, res) => {
     res.status(201).json({
       success: true,
       token,
-      role: newUser.rol.nombreRol,
+      role: rolObj.nombreRol,
       user: {
         id: newUser._id,
         email: newUser.email,
         name: newUser.nombre,
       },
-      message: "Usuario y cliente creados exitosamente"
+      message: "Usuario registrado correctamente"
     })
   } catch (error) {
     console.error("Error en registro:", error)
