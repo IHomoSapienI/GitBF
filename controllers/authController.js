@@ -110,6 +110,18 @@ const register = async (req, res) => {
       return res.status(400).json({ message: "El usuario ya existe" })
     }
 
+    // Verificar si el correo ya existe en la tabla de clientes
+    const clienteExists = await Cliente.findOne({ correocliente: email.toLowerCase().trim() })
+    if (clienteExists) {
+      return res.status(400).json({ message: "El correo ya está registrado como cliente" })
+    }
+
+    // Verificar si el celular ya existe en la tabla de clientes
+    const celularExists = await Cliente.findOne({ celularcliente: celular })
+    if (celularExists) {
+      return res.status(400).json({ message: "El celular ya está registrado como cliente" })
+    }
+
     // Manejar rol
     let rolId
     if (rol) {
@@ -141,6 +153,24 @@ const register = async (req, res) => {
       celular,
     })
 
+    // Crear cliente automáticamente después de crear el usuario
+    try {
+      const nuevoCliente = new Cliente({
+        nombrecliente: nombre,
+        apellidocliente: apellido,
+        correocliente: email.toLowerCase().trim(),
+        celularcliente: celular,
+        estadocliente: estado !== undefined ? estado : true
+      })
+
+      await nuevoCliente.save()
+      console.log(`Cliente creado automáticamente para el usuario: ${email}`)
+    } catch (clienteError) {
+      console.error("Error al crear cliente automáticamente:", clienteError)
+      // Opcional: podrías decidir si eliminar el usuario creado o continuar
+      // En este caso, continuamos pero registramos el error
+    }
+
     // Generar token
     const token = jwt.sign(
       { userId: newUser._id, role: newUser.rol.nombreRol },
@@ -157,6 +187,7 @@ const register = async (req, res) => {
         email: newUser.email,
         name: newUser.nombre,
       },
+      message: "Usuario y cliente creados exitosamente"
     })
   } catch (error) {
     console.error("Error en registro:", error)
