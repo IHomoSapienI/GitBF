@@ -1,8 +1,6 @@
 const bcrypt = require("bcryptjs")
 const jwt = require("jsonwebtoken")
 const User = require("../modules/usuario")
-const Cliente = require("../modules/cliente") // Agregar esta importación
-const Empleado = require("../modules/empleado") // Añadimos esta importación
 const Rol = require("../modules/rol")
 const { createUser } = require("../controllers/userHelper")
 const nodemailer = require("nodemailer")
@@ -28,67 +26,6 @@ transporter.verify((error, success) => {
     console.log("Servidor de correo configurado correctamente")
   }
 })
-
-// const login = async (req, res) => {
-//   const { email, password } = req.body
-
-//   try {
-//     // Validar entrada
-//     if (!email || !password) {
-//       return res.status(400).json({
-//         message: "Email y contraseña son requeridos",
-//       })
-//     }
-
-//     const user = await User.findOne({ email: email.toLowerCase().trim() }).populate("rol")
-
-//     if (!user) {
-//       return res.status(400).json({ message: "Credenciales inválidas" })
-//     }
-
-//     // Verificar si el usuario está activo
-//     if (!user.estado) {
-//       return res.status(401).json({
-//         message: "Tu cuenta ha sido desactivada. Contacta al administrador.",
-//         cuentaInactiva: true,
-//       })
-//     }
-
-//     // Verificar contraseña
-//     const isMatch = await bcrypt.compare(password.trim(), user.password)
-//     if (!isMatch) {
-//       return res.status(400).json({ message: "Credenciales inválidas" })
-//     }
-
-//     // Verificar si el rol está activo
-//     if (!user.rol || !user.rol.estadoRol) {
-//       return res.status(403).json({
-//         message: "Tu rol ha sido desactivado. Contacta al administrador.",
-//         rolDesactivado: true,
-//       })
-//     }
-
-//     // Generar token
-//     const token = jwt.sign({ userId: user._id, role: user.rol.nombreRol }, process.env.JWT_SECRET || "secret_key", {
-//       expiresIn: "24h",
-//     })
-
-//     res.json({
-//       success: true,
-//       token,
-//       role: user.rol.nombreRol,
-//       user: {
-//         id: user._id,
-//         email: user.email,
-//         name: user.nombre,
-//       },
-//     })
-//   } catch (error) {
-//     console.error("Error en login:", error)
-//     res.status(500).json({ message: "Error interno del servidor" })
-//   }
-// }
-
 
 const login = async (req, res) => {
   const { email, password } = req.body
@@ -149,7 +86,7 @@ const login = async (req, res) => {
       permisos: user.rol.permisoRol.map(p=>({
         id: p._id,
         nombrePermiso: p.nombrePermiso,
-        descripcion: p.descripcion,
+        descripcion:p.descripcion,
         activo: p.activo,
         categoria: p.categoria,
         nivel: p.nivel,
@@ -167,7 +104,7 @@ const login = async (req, res) => {
 }
 
 const register = async (req, res) => {
-  const { nombre, apellido, email, password, confirmPassword, rol, estado, celular, especialidad, salario } = req.body
+  const { nombre, apellido, email, password, confirmPassword, rol, estado, celular } = req.body
 
   try {
     // Validaciones básicas
@@ -184,44 +121,55 @@ const register = async (req, res) => {
     }
 
     // Verificar si el usuario ya existe
-    const userExists = await User.findOne({ $or: [{ correo: email }, { email }] })
+    const userExists = await User.findOne({ email: email.toLowerCase().trim() })
     if (userExists) {
       return res.status(400).json({ message: "El usuario ya existe" })
     }
 
+       // Verificar si el correo ya existe en la tabla de clientes
+    const clienteExists = await Cliente.findOne({ correocliente: email.toLowerCase().trim() })
+    if (clienteExists) {
+      return res.status(400).json({ message: "El correo ya está registrado como cliente" })
+    }
+
+    // Verificar si el celular ya existe en la tabla de clientes
+    const celularExists = await Cliente.findOne({ celularcliente: celular })
+    if (celularExists) {
+      return res.status(400).json({ message: "El celular ya está registrado como cliente" })
+    }
+
+
     // Manejar rol
-    let rolId, rolObj
+    let rolId
     if (rol) {
-      rolObj = await Rol.findById(Array.isArray(rol) ? rol[0] : rol)
-      if (!rolObj || !rolObj.estadoRol) {
+      const existeRol = await Rol.findById(rol)
+      if (!existeRol || !existeRol.estadoRol) {
         return res.status(400).json({
           message: "El rol especificado no es válido o está desactivado",
         })
       }
-      rolId = rolObj._id
+      rolId = rol
     } else {
-      rolObj = await Rol.findOne({ nombreRol: "Cliente" })
-      if (!rolObj || !rolObj.estadoRol) {
+      const defaultRol = await Rol.findOne({ nombreRol: "Cliente" })
+      if (!defaultRol || !defaultRol.estadoRol) {
         return res.status(400).json({
           message: "El rol por defecto no está disponible. Contacta al administrador.",
         })
       }
-      rolId = rolObj._id
+      rolId = defaultRol._id
     }
 
     // Crear usuario
     const newUser = await createUser({
       nombre,
       apellido,
-      correo: email,
-      email,
+      email: email.toLowerCase().trim(),
       password,
       rol: rolId,
       estado: estado !== undefined ? estado : true,
       celular,
     })
-
-    // Asociar con Cliente o Empleado según el rol
+// Asociar con Cliente o Empleado según el rolAdd commentMore actions
     if (rolObj.nombreRol === 'Cliente') {
       const clienteExistente = await Cliente.findOne({ usuario: newUser._id })
       if (!clienteExistente) {
@@ -257,11 +205,13 @@ const register = async (req, res) => {
       }
       // Eliminar cualquier registro de cliente para evitar duplicidad
       await Cliente.deleteMany({ usuario: newUser._id })
+
     }
+
 
     // Generar token
     const token = jwt.sign(
-      { userId: newUser._id, role: rolObj.nombreRol },
+      { userId: newUser._id, role: newUser.rol.nombreRol },
       process.env.JWT_SECRET || "secret_key",
       { expiresIn: "24h" },
     )
@@ -269,19 +219,24 @@ const register = async (req, res) => {
     res.status(201).json({
       success: true,
       token,
-      role: rolObj.nombreRol,
+      role: newUser.rol.nombreRol,
       user: {
         id: newUser._id,
         email: newUser.email,
         name: newUser.nombre,
       },
-      message: "Usuario registrado correctamente"
     })
   } catch (error) {
     console.error("Error en registro:", error)
     res.status(500).json({ message: "Error interno del servidor" })
   }
 }
+
+
+
+
+
+
 
 const requestPasswordReset = async (req, res) => {
   const { email } = req.body
