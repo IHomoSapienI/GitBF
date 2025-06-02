@@ -47,6 +47,7 @@ const login = async (req, res) => {
     
   },
 })
+  console.log("Usuario:", user);
 
     if (!user) {
       return res.status(400).json({ message: "Credenciales inválidas" })
