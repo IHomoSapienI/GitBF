@@ -5,6 +5,7 @@ const {
   requestPasswordReset,
   verifyResetToken,
   resetPassword,
+  getUserData,
 } = require("../controllers/authController")
 const { validarJWT } = require("../middlewares/verificartoken")
 
@@ -20,6 +21,10 @@ router.post("/register", register)
 router.post("/request-password-reset", requestPasswordReset)
 router.post("/verify-reset-token", verifyResetToken)
 router.post("/reset-password", resetPassword)
+router.get("/user", getUserData);
+
+
+
 
 module.exports = router
 
