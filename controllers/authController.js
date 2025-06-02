@@ -27,6 +27,67 @@ transporter.verify((error, success) => {
   }
 })
 
+// const login = async (req, res) => {
+//   const { email, password } = req.body
+
+//   try {
+//     // Validar entrada
+//     if (!email || !password) {
+//       return res.status(400).json({
+//         message: "Email y contraseña son requeridos",
+//       })
+//     }
+
+//     const user = await User.findOne({ email: email.toLowerCase().trim() }).populate("rol")
+
+//     if (!user) {
+//       return res.status(400).json({ message: "Credenciales inválidas" })
+//     }
+
+//     // Verificar si el usuario está activo
+//     if (!user.estado) {
+//       return res.status(401).json({
+//         message: "Tu cuenta ha sido desactivada. Contacta al administrador.",
+//         cuentaInactiva: true,
+//       })
+//     }
+
+//     // Verificar contraseña
+//     const isMatch = await bcrypt.compare(password.trim(), user.password)
+//     if (!isMatch) {
+//       return res.status(400).json({ message: "Credenciales inválidas" })
+//     }
+
+//     // Verificar si el rol está activo
+//     if (!user.rol || !user.rol.estadoRol) {
+//       return res.status(403).json({
+//         message: "Tu rol ha sido desactivado. Contacta al administrador.",
+//         rolDesactivado: true,
+//       })
+//     }
+
+//     // Generar token
+//     const token = jwt.sign({ userId: user._id, role: user.rol.nombreRol }, process.env.JWT_SECRET || "secret_key", {
+//       expiresIn: "24h",
+//     })
+
+//     res.json({
+//       success: true,
+//       token,
+//       role: user.rol.nombreRol,
+//       user: {
+//         id: user._id,
+//         email: user.email,
+//         name: user.nombre,
+//       },
+//     })
+//   } catch (error) {
+//     console.error("Error en login:", error)
+//     res.status(500).json({ message: "Error interno del servidor" })
+//   }
+// }
+
+
 const login = async (req, res) => {
   const { email, password } = req.body
 
@@ -38,7 +99,15 @@ const login = async (req, res) => {
       })
     }
 
-    const user = await User.findOne({ email: email.toLowerCase().trim() }).populate("rol")
+    const user = await User.findOne({ email: email.toLowerCase().trim() })
+    // .populate("rol")
+    .populate({
+  path: "rol",
+  populate: {
+    path: "permisoRol", // Este es el nombre correcto del campo en tu modelo Rol
+    
+  },
+})
 
     if (!user) {
       return res.status(400).json({ message: "Credenciales inválidas" })
@@ -75,6 +144,14 @@ const login = async (req, res) => {
       success: true,
       token,
       role: user.rol.nombreRol,
+      permisos: user.rol.permisoRol.map(p=>({
+        id: p._id,
+        nombrePermiso: p.nombrePermiso,
+        descripcion: p.descripcion,
+        activo: p.activo,
+        categoria: p.categoria,
+        nivel: p.nivel,
+      })),
       user: {
         id: user._id,
         email: user.email,
@@ -140,8 +217,6 @@ const register = async (req, res) => {
       estado: estado !== undefined ? estado : true,
       celular,
     })
-
-    
 
     // Generar token
     const token = jwt.sign(
