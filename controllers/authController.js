@@ -158,6 +158,8 @@ const register = async (req, res) => {
         })
       }
       rolId = defaultRol._id
+      const rolObj = await Rol.findById(rolId)
+
     }
 
     // Crear usuario
