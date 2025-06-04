@@ -164,7 +164,6 @@ const register = async (req, res) => {
 
     // Crear usuario
     const newUser = await createUser({
-      const rolObj = await Rol.findById(newUser.rol._id || newUser.rol)
       nombre,
       apellido,
       email: email.toLowerCase().trim(),
@@ -173,7 +172,7 @@ const register = async (req, res) => {
       estado: estado !== undefined ? estado : true,
       celular,
     })
-    const rolObj = newUser.rol
+    const rolObj = await Rol.findById(newUser.rol._id || newUser.rol)
 // Asociar con Cliente o Empleado según el rolAdd commentMore actions
     if (rolObj.nombreRol === 'Cliente') {
       if (!clienteExistente) {
