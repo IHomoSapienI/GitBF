@@ -158,12 +158,13 @@ const register = async (req, res) => {
         })
       }
       rolId = defaultRol._id
-      const rolObj = await Rol.findById(rolId)
+      // const rolObj = await Rol.findById(rolId)
 
     }
 
     // Crear usuario
     const newUser = await createUser({
+      const rolObj = await Rol.findById(newUser.rol._id || newUser.rol)
       nombre,
       apellido,
       email: email.toLowerCase().trim(),
@@ -172,9 +173,9 @@ const register = async (req, res) => {
       estado: estado !== undefined ? estado : true,
       celular,
     })
+    const rolObj = newUser.rol
 // Asociar con Cliente o Empleado según el rolAdd commentMore actions
     if (rolObj.nombreRol === 'Cliente') {
-      const clienteExistente = await Cliente.findOne({ usuario: newUser._id })
       if (!clienteExistente) {
         await new Cliente({
           nombrecliente: nombre,
