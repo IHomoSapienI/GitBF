@@ -80,12 +80,6 @@ const validarNombreServicio = async (req, res) => {
 // Crear un nuevo servicio
 const serviciosPost = async (req, res = response) => {
   
-    // El archivo de imagen debe venir en req.file
-  // if (!req.file) {
-  //   return res.status(400).json({
-  //     msg: "La imagen es obligatoria.",
-  //   });
-  // }
 
   if (req.file) {
   req.body.imagenUrl = req.file.filename;
@@ -101,7 +95,7 @@ const serviciosPost = async (req, res = response) => {
   }
 
   const { nombreServicio, descripcion, precio, tiempo, tipoServicio, tipoServicio2, estado } = value;
-  const imagenUrl = req.file.filename; // nombre del archivo guardado
+  const imagenUrl = `https://gitbf.onrender.com/uploads/${req.file.filename}`; // nombre del archivo guardado
 
   try {
     // Verificar que tipoServicio(s) existan en DB
