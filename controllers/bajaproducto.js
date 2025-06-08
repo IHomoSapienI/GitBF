@@ -58,9 +58,9 @@ const validarObservaciones = (observaciones) => {
     }
     
     // Verificar que solo contenga caracteres alfanuméricos y espacios
-    if (!/^[a-zA-Z0-9\s.,]+$/.test(observaciones)) {
-        return { valido: false, mensaje: "Las observaciones solo pueden contener caracteres alfanuméricos, espacios, puntos y comas" };
-    }
+    if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ0-9\s.,]+$/.test(observaciones)) {
+    return { valido: false, mensaje: "Las observaciones solo pueden contener caracteres alfanuméricos, espacios, tildes, puntos y comas" };
+}
     
     return { valido: true };
 };
