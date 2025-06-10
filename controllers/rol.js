@@ -272,32 +272,64 @@ const rolesToggleEstado = async (req, res = response) => {
   }
 }
 
-// Método DELETE para eliminar un rol por su id
-const rolesDelete = async (req, res = response) => {
-  const { id } = req.params
+// // Método DELETE para eliminar un rol por su id
+// const rolesDelete = async (req, res = response) => {
+//   const { id } = req.params
 
-  // Verificar si el rol con el id proporcionado existe
-  const rol = await Rol.findById(id)
+//   // Verificar si el rol con el id proporcionado existe
+//   const rol = await Rol.findById(id)
+//   if (!rol) {
+//     return res.status(404).json({
+//       msg: "Rol no encontrado",
+//     })
+//   }
+
+//   // Verificar si es un rol de Admin
+//   if (rol.nombreRol.toLowerCase() === "admin" || rol.esAdmin) {
+//     return res.status(403).json({
+//       msg: "No se puede eliminar el rol de Administrador",
+//       isAdminRole: true,
+//     })
+//   }
+  
+
+//   await Rol.findByIdAndDelete(id)
+
+//   res.json({
+//     msg: "Rol eliminado",
+//   })
+// }
+
+
+const rolesDelete = async (req, res = response) => {
+  const { id } = req.params;
+
+  const rol = await Rol.findById(id);
   if (!rol) {
     return res.status(404).json({
       msg: "Rol no encontrado",
-    })
+    });
   }
 
-  // Verificar si es un rol de Admin
-  if (rol.nombreRol.toLowerCase() === "admin" || rol.esAdmin) {
+  const nombreRolLower = rol.nombreRol.toLowerCase();
+  const rolesProtegidos = ["admin", "cliente"];
+
+  if (rolesProtegidos.includes(nombreRolLower)) {
     return res.status(403).json({
-      msg: "No se puede eliminar el rol de Administrador",
-      isAdminRole: true,
-    })
+      msg: `No se puede eliminar el rol de ${rol.nombreRol}`,
+      isProtectedRole: true,
+    });
   }
 
-  await Rol.findByIdAndDelete(id)
+  await Rol.findByIdAndDelete(id);
 
   res.json({
     msg: "Rol eliminado",
-  })
-}
+  });
+};
+
+
+
 
 // Método para exportar roles a Excel
 const rolesExportExcel = async (req, res = response) => {
