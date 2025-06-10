@@ -312,7 +312,7 @@ const rolesDelete = async (req, res = response) => {
   }
 
   const nombreRolLower = rol.nombreRol.toLowerCase();
-  const rolesProtegidos = ["admin", "cliente", "gerente"];
+  const rolesProtegidos = ["admin", "cliente"];
 
   if (rolesProtegidos.includes(nombreRolLower)) {
     return res.status(403).json({
