@@ -18,6 +18,6 @@ router.put('/:id', verificarPermisos (['actualizarProveedor']),actualizarProveed
 router.delete('/:id', verificarPermisos (['eliminarProveedor']), eliminarProveedor);
 
 // Cambiar el estado de un proveedor por ID
-router.patch('/:id/estado', cambiarEstadoProveedor);
+router.patch('/:id/estado', verificarPermisos(['cambiarEstadoProveedor']),cambiarEstadoProveedor);
 
 module.exports = router;
