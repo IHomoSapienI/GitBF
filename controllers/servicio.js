@@ -180,9 +180,16 @@ const serviciosPut = async (req, res = response) => {
 
   // Construimos un objeto para validar, incluyendo imagenUrl solo si hay req.file
   const dataToValidate = { ...req.body };
+
+
+  // if (req.file) {
+  //   dataToValidate.imagenUrl = req.file.filename;
+  // }
+
   if (req.file) {
-    dataToValidate.imagenUrl = req.file.filename;
-  }
+  dataToValidate.imagenUrl = `https://gitbf.onrender.com/uploads/${req.file.filename}`;
+}
+
 
   const { error, value } = partialSchema.validate(dataToValidate, { abortEarly: false });
 
