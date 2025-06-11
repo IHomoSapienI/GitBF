@@ -95,7 +95,11 @@ const serviciosPost = async (req, res = response) => {
   }
 
   const { nombreServicio, descripcion, precio, tiempo, tipoServicio, tipoServicio2, estado } = value;
-  const imagenUrl = `https://gitbf.onrender.com/uploads/${req.file.filename}`; // nombre del archivo guardado
+  // const imagenUrl = `https://gitbf.onrender.com/uploads/${req.file.filename}`; 
+  const imagenUrl = req.file
+  ? `https://gitbf.onrender.com/uploads/${req.file.filename}`
+  : undefined;
+
 
   try {
     // Verificar que tipoServicio(s) existan en DB
@@ -131,7 +135,8 @@ const serviciosPost = async (req, res = response) => {
       tipoServicio,
       tipoServicio2,
       estado,
-      imagenUrl,
+      // imagenUrl,
+      ...(imagenUrl && { imagenUrl }),
     });
 
     await servicio.save();
@@ -145,6 +150,7 @@ const serviciosPost = async (req, res = response) => {
     console.log(error);
     res.status(500).json({
       msg: "Error al crear el servicio",
+      error: error.message,
     });
   }
   
