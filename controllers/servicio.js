@@ -77,112 +77,30 @@ const validarNombreServicio = async (req, res) => {
 
 
 
-// // Crear un nuevo servicio
-// const serviciosPost = async (req, res = response) => {
-  
-
-//   if (req.file) {
-//   req.body.imagenUrl = req.file.filename;
-// }
-
-//   const { error, value } = servicioSchema.validate(req.body, { abortEarly: false });
-  
-//   if (error) {
-//     return res.status(400).json({
-//       msg: "Error en validación de datos.",
-//       errors: error.details.map(e => e.message)
-//     });
-//   }
-
-//   const { nombreServicio, descripcion, precio, tiempo, tipoServicio, tipoServicio2, estado } = value;
-//   const imagenUrl = `https://gitbf.onrender.com/uploads/${req.file.filename}`; // nombre del archivo guardado
-
-//   try {
-//     // Verificar que tipoServicio(s) existan en DB
-//     const tipos = Array.isArray(tipoServicio) ? tipoServicio : [tipoServicio];
-    
-//     for (const tipoId of tipos) {
-//       const existeTipoServicio = await TipoServicio.findById(tipoId);
-//       if (!existeTipoServicio) {
-//         return res.status(400).json({
-//           msg: `El tipo de servicio con ID ${tipoId} no existe.`,
-//         });
-//       }
-//     }
-
-//     // Verificar que tipoServicio2 exista en DB
-//     if(tipoServicio2){
-//       const tipos2 = Array.isArray(tipoServicio2) ? tipoServicio2 : [tipoServicio2];
-//       for (const tipoId2 of tipos2){
-//         const existeTipoServicio2 = await TsSchema.findById(tipoId2);
-//         if (!existeTipoServicio2) {
-//           return res.status(400).json({
-//             msg: `El tipo de servicio con ID ${tipoId2} no existe.`,
-//           });
-//         }
-//       }
-//     }
-
-//     const servicio = new Servicio({
-//       nombreServicio,
-//       descripcion,
-//       precio,
-//       tiempo,
-//       tipoServicio,
-//       tipoServicio2,
-//       estado,
-//       imagenUrl,
-//     });
-
-//     await servicio.save();
-
-//     res.status(201).json({
-//       msg: "Servicio creado correctamente",
-//       servicio,
-//     });
-
-//   } catch (error) {
-//     console.log(error);
-//     res.status(500).json({
-//       msg: "Error al crear el servicio",
-//     });
-//   }
-  
-//   }
-
-
-
+// Crear un nuevo servicio
 const serviciosPost = async (req, res = response) => {
+  
+
+  if (req.file) {
+  req.body.imagenUrl = req.file.filename;
+}
+
+  const { error, value } = servicioSchema.validate(req.body, { abortEarly: false });
+  
+  if (error) {
+    return res.status(400).json({
+      msg: "Error en validación de datos.",
+      errors: error.details.map(e => e.message)
+    });
+  }
+
+  const { nombreServicio, descripcion, precio, tiempo, tipoServicio, tipoServicio2, estado } = value;
+  const imagenUrl = `https://gitbf.onrender.com/uploads/${req.file.filename}`; // nombre del archivo guardado
+
   try {
-    // Verifica que exista un archivo
-    if (!req.file) {
-      return res.status(400).json({ msg: "La imagen es obligatoria." });
-    }
-
-    const imagenUrl = `https://gitbf.onrender.com/uploads/${req.file.filename}`;
-
-    // Validar datos (sin imagenUrl todavía)
-    const { error, value } = servicioSchema.validate(req.body, { abortEarly: false });
-
-    if (error) {
-      return res.status(400).json({
-        msg: "Error en validación de datos.",
-        errors: error.details.map(e => e.message),
-      });
-    }
-
-    const {
-      nombreServicio,
-      descripcion,
-      precio,
-      tiempo,
-      tipoServicio,
-      tipoServicio2,
-      estado,
-    } = value;
-
     // Verificar que tipoServicio(s) existan en DB
     const tipos = Array.isArray(tipoServicio) ? tipoServicio : [tipoServicio];
+    
     for (const tipoId of tipos) {
       const existeTipoServicio = await TipoServicio.findById(tipoId);
       if (!existeTipoServicio) {
@@ -192,10 +110,10 @@ const serviciosPost = async (req, res = response) => {
       }
     }
 
-    // Verificar tipoServicio2 si existe
-    if (tipoServicio2) {
+    // Verificar que tipoServicio2 exista en DB
+    if(tipoServicio2){
       const tipos2 = Array.isArray(tipoServicio2) ? tipoServicio2 : [tipoServicio2];
-      for (const tipoId2 of tipos2) {
+      for (const tipoId2 of tipos2){
         const existeTipoServicio2 = await TsSchema.findById(tipoId2);
         if (!existeTipoServicio2) {
           return res.status(400).json({
@@ -213,7 +131,7 @@ const serviciosPost = async (req, res = response) => {
       tipoServicio,
       tipoServicio2,
       estado,
-      imagenUrl, // ✅ ahora sí agregamos la URL al crear
+      imagenUrl,
     });
 
     await servicio.save();
@@ -229,121 +147,43 @@ const serviciosPost = async (req, res = response) => {
       msg: "Error al crear el servicio",
     });
   }
-};
-
-
-
-
-// // Actualizar un servicio
-// const serviciosPut = async (req, res = response) => {
-
-//   const { id } = req.params;
-
   
-//   // Validar que id es válido
-//   if (!mongoose.Types.ObjectId.isValid(id)) {
-//     return res.status(400).json({ msg: "ID de servicio inválido." });
-//   }
-
-//   // Validar solo los campos recibidos (parciales)
-//   // Para eso, podemos validar con `servicioSchema` pero con `.fork()` para hacer todo opcional
-//   const partialSchema = servicioSchema.fork(
-//     ['nombreServicio', 'descripcion', 'precio', 'tiempo', 'tipoServicio', 'tipoServicio2', 'estado', 'imagenUrl'],
-//     (schema) => schema.optional()
-//   );
-
-//   // Construimos un objeto para validar, incluyendo imagenUrl solo si hay req.file
-//   const dataToValidate = { ...req.body };
-//   if (req.file) {
-//     dataToValidate.imagenUrl = req.file.filename;
-//   }
-
-//   const { error, value } = partialSchema.validate(dataToValidate, { abortEarly: false });
-
-//   if (error) {
-//     return res.status(400).json({
-//       msg: "Error en validación de datos.",
-//       errors: error.details.map(e => e.message)
-//     });
-//   }
-
-//   try {
-//     const servicio = await Servicio.findById(id);
-
-//     if (!servicio) {
-//       return res.status(404).json({
-//         msg: "Servicio no encontrado",
-//       });
-//     }
-
-//     // Validar tipoServicio si viene en la actualización
-//     if (value.tipoServicio) {
-//       const tipos = Array.isArray(value.tipoServicio) ? value.tipoServicio : [value.tipoServicio];
-//       for (const tipoId of tipos) {
-//         const existeTipoServicio = await TipoServicio.findById(tipoId);
-//         if (!existeTipoServicio) {
-//           return res.status(400).json({
-//             msg: `El tipo de servicio con ID ${tipoId} no existe.`,
-//           });
-//         }
-//       }
-//     }
+  }
 
 
-//     // Validar tipoServicio2 si viene en la actualización
-//     if (value.tipoServicio2) {
-//       const existeTipoServicio = await TsSchema.findById(value.tipoServicio2);
-//       if (!existeTipoServicio) {
-//         return res.status(400).json({
-//           msg: `El tipo de servicio con ID ${value.tipoServicio2} no existe.`,
-//         });
-//       }
-//     }
-
-//     // Actualizar solo los campos recibidos y validados
-//     Object.assign(servicio, value);
-
-//     await servicio.save();
-
-//     res.json({
-//       msg: "Servicio actualizado correctamente",
-//       servicio,
-//     });
-//   } catch (error) {
-//     console.log(error);
-//     res.status(500).json({
-//       msg: "Error al actualizar el servicio",
-//     });
-//   }
-// }
 
 
+
+// Actualizar un servicio
 const serviciosPut = async (req, res = response) => {
+
   const { id } = req.params;
 
+  
+  // Validar que id es válido
   if (!mongoose.Types.ObjectId.isValid(id)) {
     return res.status(400).json({ msg: "ID de servicio inválido." });
   }
 
+  // Validar solo los campos recibidos (parciales)
+  // Para eso, podemos validar con `servicioSchema` pero con `.fork()` para hacer todo opcional
   const partialSchema = servicioSchema.fork(
     ['nombreServicio', 'descripcion', 'precio', 'tiempo', 'tipoServicio', 'tipoServicio2', 'estado', 'imagenUrl'],
     (schema) => schema.optional()
   );
 
+  // Construimos un objeto para validar, incluyendo imagenUrl solo si hay req.file
   const dataToValidate = { ...req.body };
-
   if (req.file) {
     dataToValidate.imagenUrl = req.file.filename;
   }
 
-  const { error, value } = partialSchema.validate(dataToValidate, {
-    abortEarly: false,
-  });
+  const { error, value } = partialSchema.validate(dataToValidate, { abortEarly: false });
 
   if (error) {
     return res.status(400).json({
       msg: "Error en validación de datos.",
-      errors: error.details.map((e) => e.message),
+      errors: error.details.map(e => e.message)
     });
   }
 
@@ -351,10 +191,12 @@ const serviciosPut = async (req, res = response) => {
     const servicio = await Servicio.findById(id);
 
     if (!servicio) {
-      return res.status(404).json({ msg: "Servicio no encontrado" });
+      return res.status(404).json({
+        msg: "Servicio no encontrado",
+      });
     }
 
-    // Validar tipoServicio si viene
+    // Validar tipoServicio si viene en la actualización
     if (value.tipoServicio) {
       const tipos = Array.isArray(value.tipoServicio) ? value.tipoServicio : [value.tipoServicio];
       for (const tipoId of tipos) {
@@ -367,25 +209,20 @@ const serviciosPut = async (req, res = response) => {
       }
     }
 
-    // Validar tipoServicio2 si viene
+
+    // Validar tipoServicio2 si viene en la actualización
     if (value.tipoServicio2) {
-      const tipos2 = Array.isArray(value.tipoServicio2) ? value.tipoServicio2 : [value.tipoServicio2];
-      for (const tipoId2 of tipos2) {
-        const existeTipoServicio2 = await TsSchema.findById(tipoId2);
-        if (!existeTipoServicio2) {
-          return res.status(400).json({
-            msg: `El tipo de servicio con ID ${tipoId2} no existe.`,
-          });
-        }
+      const existeTipoServicio = await TsSchema.findById(value.tipoServicio2);
+      if (!existeTipoServicio) {
+        return res.status(400).json({
+          msg: `El tipo de servicio con ID ${value.tipoServicio2} no existe.`,
+        });
       }
     }
 
-    // Asignar imagen completa si es solo el nombre (cuando no viene un archivo)
-    if (!req.file && value.imagenUrl && !value.imagenUrl.startsWith("http")) {
-      value.imagenUrl = `https://gitbf.onrender.com/uploads/${value.imagenUrl}`;
-    }
-
+    // Actualizar solo los campos recibidos y validados
     Object.assign(servicio, value);
+
     await servicio.save();
 
     res.json({
@@ -398,7 +235,7 @@ const serviciosPut = async (req, res = response) => {
       msg: "Error al actualizar el servicio",
     });
   }
-};
+}
 
 
 // Eliminar un servicio
