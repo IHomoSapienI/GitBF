@@ -135,8 +135,8 @@ const serviciosPost = async (req, res = response) => {
       tipoServicio,
       tipoServicio2,
       estado,
-      // imagenUrl,
-      ...(imagenUrl && { imagenUrl }),
+      imagenUrl,
+      
     });
 
     await servicio.save();
